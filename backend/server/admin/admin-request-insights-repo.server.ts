@@ -10,18 +10,36 @@ function formatDateTime(val: Date | string | null | undefined): string {
   return String(val).slice(0, 16);
 }
 
-function currentMonthStartIso(): string {
+export type AdminRequestInsightsMonth = {
+  year?: number;
+  month?: number;
+};
+
+function resolveMonth(calendar?: AdminRequestInsightsMonth) {
   const now = new Date();
-  return formatDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  const year = calendar?.year ?? now.getFullYear();
+  const month = calendar?.month ?? now.getMonth() + 1;
+  return { year, month };
 }
 
-function currentMonthLabel(): string {
-  return new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+function monthStartIso(calendar?: AdminRequestInsightsMonth): string {
+  const { year, month } = resolveMonth(calendar);
+  return formatDate(new Date(year, month - 1, 1));
 }
 
-export async function getAdminRequestInsights(): Promise<AdminRequestInsights> {
+function monthLabel(calendar?: AdminRequestInsightsMonth): string {
+  const { year, month } = resolveMonth(calendar);
+  return new Date(year, month - 1, 1).toLocaleDateString(undefined, {
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+export async function getAdminRequestInsights(
+  calendar?: AdminRequestInsightsMonth,
+): Promise<AdminRequestInsights> {
   const pool = getDbPool();
-  const monthStart = currentMonthStartIso();
+  const monthStart = monthStartIso(calendar);
 
   const [topRows] = await pool.query<
     (RowDataPacket & { id: number; oid: string | null; full_name: string; cnt: number })[]
@@ -70,7 +88,7 @@ export async function getAdminRequestInsights(): Promise<AdminRequestInsights> {
   await attachDisplayNames(recentRows, 'requester_oid', 'requester_name');
 
   return {
-    monthLabel: currentMonthLabel(),
+    monthLabel: monthLabel(calendar),
     topRequesters: topRows.map((row) => ({
       staffId: String(row.id),
       fullName: row.full_name,
