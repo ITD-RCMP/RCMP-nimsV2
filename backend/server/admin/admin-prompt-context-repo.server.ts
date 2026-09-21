@@ -3,51 +3,160 @@ import {
   DASHBOARD_REQUEST_WORKFLOW_LABEL,
   type TechnicianDashboardStats,
 } from '@shared/lib/dashboard-schema';
-import type { AdminRequestInsights } from '@shared/lib/admin-request-insights-schema';
-import { ROLE_USER } from '@shared/lib/auth-session';
 import {
   extractAssetIdCandidates,
   extractMacCandidates,
-  extractRequestIdCandidates,
   extractSerialCandidates,
 } from '@shared/lib/admin-prompt-context';
 import {
   ASSET_KIND_LABEL,
   formatStatusLabel,
   INVENTORY_STATUSES,
+  parseAssetKindParam,
   type AssetDetailResponse,
   type AssetKind,
 } from '@shared/lib/inventory-schema';
-import { STATUS_ID } from '@shared/lib/asset-status-actions';
 import { sqlDateToIso as formatDate } from '@shared/lib/date-format';
 import { attachDisplayNames } from '@backend/server/core/azure-directory.server';
 import { getDbPool } from '@backend/server/core/db';
 
-function summarizeInventory(stats: TechnicianDashboardStats) {
-  const kinds = ['laptop', 'av', 'network'] as const;
-  return Object.fromEntries(
-    kinds.map((kind) => {
-      const row = stats[kind];
-      return [
-        ASSET_KIND_LABEL[kind],
-        {
-          inStore: row.store,
-          deployed: row.deploy,
-          total: row.total,
-          registeredTotal: row.registeredTotal,
-          byStatus: row.byStatus.map((status) => ({
-            status: formatStatusLabel(status.statusId),
-            count: status.count,
-          })),
-        },
-      ];
-    }),
-  );
+const DEFAULT_LIST_LIMIT = 10;
+const MAX_LIST_LIMIT = 15;
+const MAX_OVERDUE_LIMIT = 20;
+
+export type AdminPromptOpsPulse = {
+  generatedAt: string;
+  checkedOutAssets: number;
+  overdueReturns: number;
+  openRepairs: number;
+  activeRequests: number;
+};
+
+export function clampPromptLimit(
+  value: number | undefined,
+  fallback = DEFAULT_LIST_LIMIT,
+  max = MAX_LIST_LIMIT,
+) {
+  if (value == null || !Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(1, Math.trunc(value)));
 }
 
-async function loadOverdueReturns() {
+function isMacLike(value: string) {
+  const hex = value.replace(/[^0-9A-Fa-f]/g, '');
+  return hex.length >= 8 && hex.length <= 12;
+}
+
+export function summarizeInventory(stats: TechnicianDashboardStats) {
+  const kinds = ['laptop', 'av', 'network'] as const;
+  return kinds.map((kind) => {
+    const row = stats[kind];
+    return {
+      kind: ASSET_KIND_LABEL[kind],
+      inStore: row.store,
+      deployed: row.deploy,
+      total: row.total,
+      registeredTotal: row.registeredTotal,
+      byStatus: row.byStatus.map((status) => ({
+        status: formatStatusLabel(status.statusId),
+        count: status.count,
+      })),
+    };
+  });
+}
+
+export function summarizeRequestStats(stats: TechnicianDashboardStats) {
+  return {
+    activeTotal: stats.totalRequest.total,
+    byWorkflow: stats.totalRequest.byWorkflow.map((row) => ({
+      status: DASHBOARD_REQUEST_WORKFLOW_LABEL[row.key],
+      count: row.count,
+    })),
+    poolAvailableByKind: stats.totalRequest.poolByKind.map((row) => ({
+      kind: ASSET_KIND_LABEL[row.kind],
+      count: row.count,
+    })),
+    requestPoolTotal: stats.requestPoolCount,
+  };
+}
+
+export function getAssetStatusReference() {
+  return {
+    note: 'These meanings apply to assets. Request workflow statuses are separate.',
+    statuses: INVENTORY_STATUSES.map((status) => ({
+      statusId: status.statusId,
+      meaning: status.name,
+    })),
+  };
+}
+
+export async function loadCheckedOutCount() {
+  const pool = getDbPool();
+  const [rows] = await pool.query<(RowDataPacket & { cnt: number })[]>(
+    `SELECT COUNT(*) AS cnt
+     FROM request_assignment ra
+     INNER JOIN request r ON r.request_id = ra.request_id
+     WHERE ra.checkout_at IS NOT NULL
+       AND ra.returned_at IS NULL
+       AND ra.asset_id IS NOT NULL
+       AND r.rejected_at IS NULL`,
+  );
+  return Number(rows[0]?.cnt ?? 0);
+}
+
+export async function countOverdueReturns() {
   const pool = getDbPool();
   const today = formatDate(new Date());
+  const [rows] = await pool.query<(RowDataPacket & { cnt: number })[]>(
+    `SELECT COUNT(DISTINCT r.request_id) AS cnt
+     FROM request r
+     INNER JOIN request_assignment ra ON ra.request_id = r.request_id
+     WHERE r.rejected_at IS NULL
+       AND r.return_date < ?
+       AND ra.checkout_at IS NOT NULL
+       AND ra.returned_at IS NULL
+       AND ra.asset_id IS NOT NULL`,
+    [today],
+  );
+  return Number(rows[0]?.cnt ?? 0);
+}
+
+export async function countOpenRepairs() {
+  const pool = getDbPool();
+  const [rows] = await pool.query<(RowDataPacket & { cnt: number })[]>(
+    `SELECT COUNT(*) AS cnt FROM repair WHERE completed_date IS NULL`,
+  );
+  return Number(rows[0]?.cnt ?? 0);
+}
+
+export async function countActiveRequests() {
+  const pool = getDbPool();
+  const [rows] = await pool.query<(RowDataPacket & { cnt: number })[]>(
+    `SELECT COUNT(*) AS cnt FROM request WHERE rejected_at IS NULL`,
+  );
+  return Number(rows[0]?.cnt ?? 0);
+}
+
+export async function buildAdminPromptOpsPulse(): Promise<AdminPromptOpsPulse> {
+  const [checkedOutAssets, overdueReturns, openRepairs, activeRequests] = await Promise.all([
+    loadCheckedOutCount(),
+    countOverdueReturns(),
+    countOpenRepairs(),
+    countActiveRequests(),
+  ]);
+
+  return {
+    generatedAt: new Date().toISOString(),
+    checkedOutAssets,
+    overdueReturns,
+    openRepairs,
+    activeRequests,
+  };
+}
+
+export async function loadOverdueReturns(limit?: number) {
+  const pool = getDbPool();
+  const today = formatDate(new Date());
+  const rowLimit = clampPromptLimit(limit, DEFAULT_LIST_LIMIT, MAX_OVERDUE_LIMIT);
   const [rows] = await pool.query<
     (RowDataPacket & {
       request_id: number;
@@ -68,13 +177,14 @@ async function loadOverdueReturns() {
        AND ra.asset_id IS NOT NULL
      GROUP BY r.request_id, r.return_date, u.oid
      ORDER BY r.return_date ASC
-     LIMIT 15`,
-    [today],
+     LIMIT ?`,
+    [today, rowLimit],
   );
   await attachDisplayNames(rows, 'requester_oid', 'requester_name');
 
   return rows.map((row) => ({
     requestId: row.request_id,
+    requesterOid: row.requester_oid,
     requesterName: row.requester_name,
     returnDate: formatDate(row.return_date),
     assetsOut: Number(row.assets_out),
@@ -88,81 +198,23 @@ async function loadOverdueReturns() {
   }));
 }
 
-async function loadUserCounts() {
-  const pool = getDbPool();
-  const [rows] = await pool.query<(RowDataPacket & { role_name: string; cnt: number })[]>(
-    `SELECT r.name AS role_name, COUNT(*) AS cnt
-     FROM users u
-     INNER JOIN role r ON r.id = u.role_id
-     GROUP BY r.name
-     ORDER BY r.name`,
-  );
-  return rows.map((row) => ({
-    role: row.role_name,
-    count: Number(row.cnt),
-  }));
-}
+function summarizeAssetLookup(detail: AssetDetailResponse) {
+  const { asset } = detail;
+  const location =
+    asset.kind === 'laptop'
+      ? [asset.recipientName, asset.recipientDivision, asset.placeHandler].filter(Boolean).join(' · ') ||
+        null
+      : [asset.building, asset.level, asset.zone].filter(Boolean).join(' · ') || null;
 
-async function loadCheckedOutCount() {
-  const pool = getDbPool();
-  const [rows] = await pool.query<(RowDataPacket & { cnt: number })[]>(
-    `SELECT COUNT(*) AS cnt
-     FROM request_assignment ra
-     INNER JOIN request r ON r.request_id = ra.request_id
-     WHERE ra.checkout_at IS NOT NULL
-       AND ra.returned_at IS NULL
-       AND ra.asset_id IS NOT NULL
-       AND r.rejected_at IS NULL`,
-  );
-  return Number(rows[0]?.cnt ?? 0);
-}
-
-function summarizeAssetForPrompt(detail: AssetDetailResponse) {
-  const { asset, trails } = detail;
-  const base = {
+  return {
     assetId: asset.assetId,
     kind: ASSET_KIND_LABEL[asset.kind],
+    serialNum: asset.serialNum,
     status: asset.statusName,
     brand: asset.brand,
     model: asset.model,
-    serialNum: asset.serialNum,
-    remarks: asset.remarks,
-    createdAt: asset.createdAt,
-    updatedAt: asset.updatedAt,
-    recentActivity: trails.slice(0, 12).map((trail) => ({
-      at: trail.at,
-      category: trail.category,
-      title: trail.title,
-      detail: trail.detail,
-    })),
-  };
-
-  if (asset.kind === 'laptop') {
-    return {
-      ...base,
-      category: asset.category,
-      processor: asset.processor,
-      memory: asset.memory,
-      os: asset.os,
-      storage: asset.storage,
-      currentAssignee: asset.recipientDivision,
-    };
-  }
-
-  if (asset.kind === 'av') {
-    return {
-      ...base,
-      assetIdOld: asset.assetIdOld,
-      category: asset.category,
-      currentLocation: [asset.building, asset.level, asset.zone].filter(Boolean).join(' · ') || null,
-    };
-  }
-
-  return {
-    ...base,
-    macAddress: asset.macAddress,
-    ipAddress: asset.ipAddress,
-    currentLocation: [asset.building, asset.level, asset.zone].filter(Boolean).join(' · ') || null,
+    locationOrHandover: location,
+    macAddress: asset.kind === 'network' ? asset.macAddress : null,
   };
 }
 
@@ -195,54 +247,62 @@ async function findAssetIdsByMac(mac: string): Promise<{ kind: AssetKind; assetI
   return rows.map((row) => ({ kind: row.kind, assetId: Number(row.asset_id) }));
 }
 
-async function loadAssetLookup(lookupText: string) {
-  const { findAssetByAnyId } = await import('@backend/server/assets/assets-repo.server');
-  const assetsById: ReturnType<typeof summarizeAssetForPrompt>[] = [];
-  const seen = new Set<string>();
-  const notFoundIds: number[] = [];
-  const queriedIds: number[] = [];
+export async function lookupAssetsForPrompt(query: string, limit = DEFAULT_LIST_LIMIT) {
+  const trimmed = query.trim();
+  const cap = clampPromptLimit(limit);
+  if (!trimmed) {
+    return { query: trimmed, matches: [], notFound: true };
+  }
 
-  const addDetail = (detail: AssetDetailResponse | null, key: string) => {
-    if (!detail || seen.has(key)) return;
+  const { findAssetByAnyId, findAssetByCode } = await import('@backend/server/assets/assets-repo.server');
+  const matches: ReturnType<typeof summarizeAssetLookup>[] = [];
+  const seen = new Set<string>();
+
+  const addDetail = (detail: AssetDetailResponse | null) => {
+    if (!detail || matches.length >= cap) return;
+    const key = `${detail.asset.kind}:${detail.asset.assetId}`;
+    if (seen.has(key)) return;
     seen.add(key);
-    assetsById.push(summarizeAssetForPrompt(detail));
+    matches.push(summarizeAssetLookup(detail));
   };
 
-  for (const assetId of extractAssetIdCandidates(lookupText)) {
-    queriedIds.push(assetId);
-    const detail = await findAssetByAnyId(assetId);
-    if (detail) {
-      addDetail(detail, `${detail.asset.kind}:${detail.asset.assetId}`);
-    } else {
-      notFoundIds.push(assetId);
+  addDetail(await findAssetByCode(trimmed));
+
+  for (const assetId of extractAssetIdCandidates(trimmed)) {
+    if (matches.length >= cap) break;
+    addDetail(await findAssetByAnyId(assetId));
+  }
+
+  const serials = new Set<string>([trimmed, ...extractSerialCandidates(trimmed)]);
+  for (const serial of serials) {
+    if (matches.length >= cap) break;
+    if (serial.length < 3) continue;
+    const found = await findAssetIdsBySerial(serial);
+    for (const match of found) {
+      if (matches.length >= cap) break;
+      addDetail(await findAssetByAnyId(match.assetId));
     }
   }
 
-  for (const serial of extractSerialCandidates(lookupText)) {
-    const matches = await findAssetIdsBySerial(serial);
-    if (matches.length === 0) continue;
-    for (const match of matches) {
-      const detail = await findAssetByAnyId(match.assetId);
-      addDetail(detail, `${match.kind}:${match.assetId}`);
-    }
-  }
-
-  for (const mac of extractMacCandidates(lookupText)) {
-    const matches = await findAssetIdsByMac(mac);
-    for (const match of matches) {
-      const detail = await findAssetByAnyId(match.assetId);
-      addDetail(detail, `${match.kind}:${match.assetId}`);
+  const macQueries = new Set<string>([...extractMacCandidates(trimmed), ...extractMacCandidates(`mac ${trimmed}`)]);
+  if (isMacLike(trimmed)) macQueries.add(trimmed);
+  for (const mac of macQueries) {
+    if (matches.length >= cap) break;
+    const found = await findAssetIdsByMac(mac);
+    for (const match of found) {
+      if (matches.length >= cap) break;
+      addDetail(await findAssetByAnyId(match.assetId));
     }
   }
 
   return {
-    queriedIds,
-    assetsById,
-    notFoundIds,
+    query: trimmed,
+    matches,
+    notFound: matches.length === 0,
   };
 }
 
-async function summarizeRequestForPrompt(requestId: number) {
+export async function summarizeRequestForPrompt(requestId: number) {
   const pool = getDbPool();
   const [headers] = await pool.query<
     (RowDataPacket & {
@@ -325,6 +385,7 @@ async function summarizeRequestForPrompt(requestId: number) {
 
   return {
     requestId: header.request_id,
+    requesterOid: header.requester_oid,
     requesterName: header.requester_name,
     programType: header.program_type,
     usageLocation: header.usage_location,
@@ -350,29 +411,48 @@ async function summarizeRequestForPrompt(requestId: number) {
   };
 }
 
-async function loadRequestLookup(lookupText: string) {
-  const requestIds = extractRequestIdCandidates(lookupText);
-  const requestsById = [];
-  const notFoundIds: number[] = [];
-
-  for (const requestId of requestIds) {
-    const summary = await summarizeRequestForPrompt(requestId);
-    if (summary) {
-      requestsById.push(summary);
-    } else {
-      notFoundIds.push(requestId);
-    }
+export async function lookupRequestForPrompt(requestIdInput: number | string) {
+  const requestId =
+    typeof requestIdInput === 'number'
+      ? requestIdInput
+      : Number(String(requestIdInput).replace(/\D/g, ''));
+  if (!Number.isInteger(requestId) || requestId <= 0) {
+    return { requestId: requestIdInput, found: false as const, request: null };
   }
 
+  const request = await summarizeRequestForPrompt(requestId);
   return {
-    queriedIds: requestIds,
-    requestsById,
-    notFoundIds,
+    requestId,
+    found: Boolean(request),
+    request,
   };
 }
 
-async function loadOpenRepairs() {
+export async function loadOpenRepairs(options?: {
+  limit?: number;
+  assetKind?: string;
+  assetId?: number;
+}) {
   const pool = getDbPool();
+  const rowLimit = clampPromptLimit(options?.limit);
+  const kind = options?.assetKind ? parseAssetKindParam(options.assetKind) : null;
+  const assetId =
+    options?.assetId != null && Number.isInteger(options.assetId) && options.assetId > 0
+      ? options.assetId
+      : null;
+
+  const filters = ['r.completed_date IS NULL'];
+  const params: Array<string | number> = [];
+  if (kind) {
+    filters.push('r.asset_type = ?');
+    params.push(kind);
+  }
+  if (assetId != null) {
+    filters.push('r.asset_id = ?');
+    params.push(assetId);
+  }
+  params.push(rowLimit);
+
   const [rows] = await pool.query<
     (RowDataPacket & {
       asset_id: number;
@@ -390,9 +470,10 @@ async function loadOpenRepairs() {
      LEFT JOIN laptop l ON l.asset_id = r.asset_id AND r.asset_type = 'laptop'
      LEFT JOIN av ON av.asset_id = r.asset_id AND r.asset_type = 'av'
      LEFT JOIN network n ON n.asset_id = r.asset_id AND r.asset_type = 'network'
-     WHERE r.completed_date IS NULL
+     WHERE ${filters.join(' AND ')}
      ORDER BY r.repair_date ASC
-     LIMIT 10`,
+     LIMIT ?`,
+    params,
   );
 
   return rows.map((row) => ({
@@ -405,10 +486,12 @@ async function loadOpenRepairs() {
   }));
 }
 
-async function loadExpiringWarranties() {
+export async function loadExpiringWarranties(options?: { withinDays?: number; limit?: number }) {
   const pool = getDbPool();
+  const withinDays = clampPromptLimit(options?.withinDays, 90, 365);
+  const rowLimit = clampPromptLimit(options?.limit);
   const today = formatDate(new Date());
-  const horizon = formatDate(new Date(Date.now() + 90 * 86_400_000));
+  const horizon = formatDate(new Date(Date.now() + withinDays * 86_400_000));
   const [rows] = await pool.query<
     (RowDataPacket & {
       asset_id: number;
@@ -427,8 +510,8 @@ async function loadExpiringWarranties() {
      LEFT JOIN network n ON n.asset_id = w.asset_id AND w.asset_type = 'network'
      WHERE w.warranty_end_date >= ? AND w.warranty_end_date <= ?
      ORDER BY w.warranty_end_date ASC
-     LIMIT 10`,
-    [today, horizon],
+     LIMIT ?`,
+    [today, horizon, rowLimit],
   );
 
   return rows.map((row) => ({
@@ -438,90 +521,4 @@ async function loadExpiringWarranties() {
     model: row.model,
     warrantyEnds: formatDate(row.warranty_end_date),
   }));
-}
-
-async function loadPreDisposedLaptopCount() {
-  const pool = getDbPool();
-  const [rows] = await pool.query<(RowDataPacket & { cnt: number })[]>(
-    `SELECT COUNT(*) AS cnt FROM laptop WHERE status_id = ?`,
-    [STATUS_ID.PRE_DISPOSED],
-  );
-  return Number(rows[0]?.cnt ?? 0);
-}
-
-export async function buildAdminPromptDbContext(
-  dashboardStats: TechnicianDashboardStats,
-  requestInsights: AdminRequestInsights,
-  lookupText = '',
-) {
-  const [
-    overdueReturns,
-    usersByRole,
-    checkedOutAssets,
-    assetLookup,
-    requestLookup,
-    openRepairs,
-    expiringWarranties,
-    preDisposedLaptops,
-  ] = await Promise.all([
-    loadOverdueReturns(),
-    loadUserCounts(),
-    loadCheckedOutCount(),
-    loadAssetLookup(lookupText),
-    loadRequestLookup(lookupText),
-    loadOpenRepairs(),
-    loadExpiringWarranties(),
-    loadPreDisposedLaptopCount(),
-  ]);
-
-  const registeredUsers =
-    usersByRole.find((row) => row.role.toLowerCase() === 'user')?.count ??
-    usersByRole.reduce((sum, row) => sum + row.count, 0);
-
-  return {
-    generatedAt: new Date().toISOString(),
-    statusReference: INVENTORY_STATUSES.map((status) => ({
-      statusId: status.statusId,
-      meaning: status.name,
-    })),
-    inventory: summarizeInventory(dashboardStats),
-    operations: {
-      openRepairs,
-      expiringWarranties,
-      preDisposedLaptops,
-    },
-    requests: {
-      activeTotal: dashboardStats.totalRequest.total,
-      byWorkflow: dashboardStats.totalRequest.byWorkflow.map((row) => ({
-        status: DASHBOARD_REQUEST_WORKFLOW_LABEL[row.key],
-        count: row.count,
-      })),
-      poolAvailableByKind: dashboardStats.totalRequest.poolByKind.map((row) => ({
-        kind: ASSET_KIND_LABEL[row.kind],
-        count: row.count,
-      })),
-      requestPoolTotal: dashboardStats.requestPoolCount,
-      checkedOutAssets,
-      overdueReturns,
-      recentRequests: requestInsights.recentRequests,
-      topRequestersThisMonth: requestInsights.topRequesters,
-      programTypesThisMonth: requestInsights.programTypes,
-      monthLabel: requestInsights.monthLabel,
-    },
-    users: {
-      registeredUsers,
-      byRole: usersByRole,
-      staffAndAdminNote: `Only users with role_id ${ROLE_USER} are end-user requesters.`,
-    },
-    assetsById: assetLookup.assetsById,
-    assetLookup: {
-      queriedIds: assetLookup.queriedIds,
-      notFoundIds: assetLookup.notFoundIds,
-    },
-    requestsById: requestLookup.requestsById,
-    requestLookup: {
-      queriedIds: requestLookup.queriedIds,
-      notFoundIds: requestLookup.notFoundIds,
-    },
-  };
 }

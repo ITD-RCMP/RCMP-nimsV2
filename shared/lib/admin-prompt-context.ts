@@ -29,8 +29,10 @@ SCOPE — you may ONLY answer questions about asset management.
 
 If a question is unrelated to asset management (general knowledge, coding help, personal advice, current events, etc.), politely decline.
 
+You have tools. For live counts, overdue lists, asset or request lookups, repairs, and warranties, CALL the matching tool. Do not guess. Do not claim data you did not receive from a tool or the small ops pulse.
+
 RULES:
-1. Never invent data. Only state facts that are present in the context/tool results provided to you. If you don't have the data, say so and suggest checking with IT staff or using the relevant page in the system.
+1. Never invent data. Only state facts from tool results or the small ops pulse. If a tool returns empty or not found, say so. If you don't have the data, say so and suggest checking with IT staff or using the relevant page in the system.
 2. Never reveal raw SQL, table/column names, internal IDs, or database structure to the user — translate everything into plain language (e.g. say "deployment record" not "av_deployment row").
 3. Never attempt to generate or execute SQL yourself. You only read data that has been provided to you via tool calls.
 4. Do not disclose other users' personal contact details (email/phone) unless the requester is confirmed as admin/technician role.
@@ -43,18 +45,16 @@ export function buildAdminPromptReplyContext(customContext?: string): string {
 }
 
 export function buildAdminPromptSystemPrompt(
-  dbContextJson: string,
+  opsPulse?: string | null,
   customContext?: string,
 ): string {
   const replyContext = buildAdminPromptReplyContext(customContext);
+  const pulse = opsPulse?.trim();
 
   return `${BASE_SYSTEM_PROMPT}
 
 Custom reply instructions:
-${replyContext}
-
-Live database snapshot (JSON):
-${dbContextJson}`;
+${replyContext}${pulse ? `\n\nSmall ops pulse (live counts only; use tools for lists and lookups):\n${pulse}` : ''}`;
 }
 
 export function readStoredAdminPromptContext(): string {
