@@ -16,6 +16,11 @@ import { TechnicianShell } from '@/technician/technician-shell';
 import { AssetStatusActions } from '@/technician/asset-status-actions';
 import { AssetStatusBadge } from '@/technician/asset-status-badge';
 import { RegisterAssetActions } from '@/technician/register-asset-actions';
+import {
+	EMPTY_PLACE_FILTER,
+	matchesPlaceFilter,
+	type AssetPlaceFilter,
+} from '@/technician/asset-place-column';
 import { filterBySearch, filterByStatus, useAssets } from '@/hooks/assets';
 import {
 	isDesktopCategory,
@@ -108,6 +113,7 @@ export function TechnicianLaptopPage() {
 	const navigate = useNavigate();
 	const [search, setSearch] = useState('');
 	const [statusFilter, setStatusFilter] = useState<number | null>(null);
+	const [placeFilter, setPlaceFilter] = useState<AssetPlaceFilter>(EMPTY_PLACE_FILTER);
 	const [formFactorFilter, setFormFactorFilter] = useState<LaptopFormFactorFilter>('all');
 	const [divisionFilter, setDivisionFilter] = useState<LaptopAssignmentBucket | null>(null);
 	const [otherCategoryFilter, setOtherCategoryFilter] = useState<string | null>(null);
@@ -176,11 +182,21 @@ export function TechnicianLaptopPage() {
 		const bySearch = filterBySearch(byCategory, search, (c) =>
 			[c.category ?? '', c.recipientName ?? '', c.placeHandler ?? '', c.registeredBy ?? '', c.proposedBy ?? ''].join(' '),
 		);
-		return filterByStatus(bySearch, statusFilter);
-	}, [items, search, statusFilter, categoryView, formFactorFilter, divisionFilter, otherCategoryFilter]);
+		const byStatus = filterByStatus(bySearch, statusFilter);
+		return byStatus.filter((item) =>
+			matchesPlaceFilter(
+				{
+					building: item.placeBuilding,
+					level: item.placeLevel,
+					zone: item.placeZone,
+				},
+				placeFilter,
+			),
+		);
+	}, [items, search, statusFilter, placeFilter, categoryView, formFactorFilter, divisionFilter, otherCategoryFilter]);
 
 	const pagination = usePagination(filtered, {
-		resetKey: `${search}|${statusFilter ?? ''}|${categoryView}|${formFactorFilter}|${divisionFilter ?? ''}|${otherCategoryFilter ?? ''}`,
+		resetKey: `${search}|${statusFilter ?? ''}|${placeFilter.building ?? ''}|${placeFilter.level ?? ''}|${placeFilter.zone ?? ''}|${categoryView}|${formFactorFilter}|${divisionFilter ?? ''}|${otherCategoryFilter ?? ''}`,
 	});
 
 	const showHandoverColumn =
@@ -237,6 +253,13 @@ export function TechnicianLaptopPage() {
 							setOtherCategoryFilter(null);
 						}
 					}}
+					placeItems={items.map((item) => ({
+						building: item.placeBuilding,
+						level: item.placeLevel,
+						zone: item.placeZone,
+					}))}
+					placeFilter={placeFilter}
+					onPlaceFilterChange={setPlaceFilter}
 					leading={
 						<Button size="sm" variant="outline" asChild>
 							<Link to="/technician/handover-staff">

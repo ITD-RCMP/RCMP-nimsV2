@@ -24,8 +24,11 @@ import {
 } from '@/technician/asset-stock-summary';
 import { AssetTablePagination } from '@/technician/asset-table-pagination';
 import {
+  EMPTY_PLACE_FILTER,
   formatPlaceCell,
+  matchesPlaceFilter,
   PlaceTableHead,
+  type AssetPlaceFilter,
   type PlaceColumnView,
 } from '@/technician/asset-place-column';
 
@@ -33,6 +36,7 @@ export function TechnicianAvPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState<AssetStockBreakdownFilter | null>(null);
+  const [placeFilter, setPlaceFilter] = useState<AssetPlaceFilter>(EMPTY_PLACE_FILTER);
   const [placeColumnView, setPlaceColumnView] = useState<PlaceColumnView>('place');
   const { items, isLoading, error, updateStatus } = useAssets('av');
 
@@ -57,8 +61,10 @@ export function TechnicianAvPage() {
     const bySearch = filterBySearch(items, search, (item) =>
       [item.category ?? '', item.assetIdOld ?? ''].join(' '),
     );
-    return bySearch.filter((item) => matchesAssetStockFilter(item, stockFilter));
-  }, [items, search, stockFilter]);
+    return bySearch
+      .filter((item) => matchesAssetStockFilter(item, stockFilter))
+      .filter((item) => matchesPlaceFilter(item, placeFilter));
+  }, [items, search, stockFilter, placeFilter]);
 
   const pagination = usePagination(filtered, {
     resetKey: `${search}|${stockFilter?.kind ?? ''}|${
@@ -67,7 +73,7 @@ export function TechnicianAvPage() {
         : stockFilter?.kind === 'building'
           ? stockFilter.buildingKey
           : ''
-    }`,
+    }|${placeFilter.building ?? ''}|${placeFilter.level ?? ''}|${placeFilter.zone ?? ''}`,
   });
 
   const statusFilter = stockFilter?.kind === 'status' ? stockFilter.statusId : null;
@@ -102,6 +108,9 @@ export function TechnicianAvPage() {
           onStatusFilterChange={(statusId) => {
             setStockFilter(statusId == null ? null : { kind: 'status', statusId });
           }}
+          placeItems={items}
+          placeFilter={placeFilter}
+          onPlaceFilterChange={setPlaceFilter}
         />
       </div>
 
