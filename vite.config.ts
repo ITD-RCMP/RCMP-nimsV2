@@ -238,7 +238,7 @@ export default defineConfig(({ mode }) => {
     },
     define: envDefine,
     ssr: {
-      external: ['mysql2', 'mysql2/promise', 'nodemailer', 'exceljs'],
+      external: ['mysql2', 'mysql2/promise', 'nodemailer', 'exceljs', 'better-sqlite3'],
     },
     resolve: {
       alias: {
@@ -264,7 +264,7 @@ export default defineConfig(({ mode }) => {
           path.resolve(__dirname, 'backend/plugins/overdue-email-scheduler.ts'),
         ],
         rollupConfig: {
-          external: ['mysql2', 'mysql2/promise', 'nodemailer'],
+          external: ['mysql2', 'mysql2/promise', 'nodemailer', 'better-sqlite3'],
         },
         routeRules: {
           '/**': {

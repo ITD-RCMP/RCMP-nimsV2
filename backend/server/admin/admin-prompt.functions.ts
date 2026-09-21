@@ -148,7 +148,7 @@ export const adminPromptChatFn = createServerFn({ method: 'POST' })
       ),
     ];
     const messages = [...history, { role: 'user' as const, content: message }];
-    const tools = createAdminPromptServerTools(scope?.type ?? 'global');
+    const tools = createAdminPromptServerTools(scope);
 
     try {
       const reply = await chat({

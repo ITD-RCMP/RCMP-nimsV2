@@ -35,6 +35,13 @@ dist-ssr
 assetid-flow.md
 docs
 
+# Ask AI messy-text side store (rebuild with npm run ai:reindex)
+backend/data/*.sqlite
+backend/data/*.sqlite-wal
+backend/data/*.sqlite-shm
+backend/data/*.sqlite-journal
+.data/
+
 # env
 .env
 .env.*
