@@ -1,12 +1,18 @@
-import { chat, maxIterations } from '@tanstack/ai';
+import { chat, defineChatMiddleware, maxIterations } from '@tanstack/ai';
 import { createServerFn } from '@tanstack/react-start';
 import {
+  ADMIN_PROMPT_ACTION_REFUSAL,
   buildAdminPromptSystemPrompt,
+  isAdminPromptActionRequest,
   parseAdminPromptScope,
   type AdminPromptScope,
 } from '@shared/lib/admin-prompt-context';
 import { staffMiddleware } from '@backend/server/core/auth-middleware';
-import { getOpenRouterChatAdapter, isOpenRouterConfigured } from '@backend/lib/openrouter';
+import {
+  getOpenRouterChatAdapter,
+  getOpenRouterModel,
+  isOpenRouterConfigured,
+} from '@backend/lib/openrouter';
 
 type PromptChatRole = 'user' | 'assistant';
 
@@ -42,8 +48,25 @@ function formatOpsPulse(pulse: {
   ].join('\n');
 }
 
+function scopeRef(scope: AdminPromptScope | undefined) {
+  if (!scope) return null;
+  if (scope.type === 'asset') return `${scope.kind}:${scope.assetId}`;
+  return `request:${scope.requestId}`;
+}
+
+function createToolUseTracker() {
+  const names: string[] = [];
+  const middleware = defineChatMiddleware({
+    name: 'admin-prompt-tool-tracker',
+    onAfterToolCall(_ctx, info) {
+      if (info.toolName) names.push(info.toolName);
+    },
+  });
+  return { middleware, names };
+}
+
 async function loadFocusedPromptRecord(scope: AdminPromptScope) {
-    const { lookupRequestForPrompt, loadOpenRepairs } = await import(
+  const { lookupRequestForPrompt, loadOpenRepairs } = await import(
     '@backend/server/admin/admin-prompt-context-repo.server'
   );
 
@@ -100,74 +123,119 @@ export const adminPromptChatFn = createServerFn({ method: 'POST' })
       scope?: AdminPromptScope;
     }) => data,
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const started = Date.now();
     const message = data.message.trim();
-    if (!message) {
-      throw new Error('Enter a question before sending.');
-    }
-
-    if (!isOpenRouterConfigured()) {
-      throw new Error('OpenRouter is not configured. Add OPENROUTER_API_KEY to your .env file.');
-    }
-
     const scope = parseAdminPromptScope(data.scope);
-    const { buildAdminPromptOpsPulse } = await import(
-      '@backend/server/admin/admin-prompt-context-repo.server'
-    );
-    const { createAdminPromptServerTools } = await import(
-      '@backend/server/admin/admin-prompt-tools.server'
-    );
+    const toolsUsed: string[] = [];
+    let answer = '';
+    let ok = true;
+    let errorMessage: string | null = null;
 
-    const [pulse, focusedRecord] = await Promise.all([
-      scope ? Promise.resolve(null) : buildAdminPromptOpsPulse(),
-      scope
-        ? loadFocusedPromptRecord(scope).catch((error) => {
-            console.error('[admin-prompt] Failed to load scoped record.', error);
-            return JSON.stringify({
-              ...scope,
-              notFound: true,
-              error: 'The focused record could not be loaded.',
-            });
-          })
-        : Promise.resolve(null),
-    ]);
-    const history = (data.history ?? [])
-      .filter((turn) => turn.content.trim())
-      .slice(scope ? -6 : -8)
-      .map((turn) => ({
-        role: turn.role,
-        content: turn.content.trim(),
-      }));
-
-    const adapter = getOpenRouterChatAdapter();
-    const systemPrompts = [
-      buildAdminPromptSystemPrompt(
-        pulse ? formatOpsPulse(pulse) : null,
-        data.customContext,
-        focusedRecord,
-      ),
-    ];
-    const messages = [...history, { role: 'user' as const, content: message }];
-    const tools = createAdminPromptServerTools(scope);
+    const writeLog = () => {
+      void import('@backend/server/admin/admin-prompt-log-repo.server')
+        .then(({ insertAdminPromptLog }) =>
+          insertAdminPromptLog({
+            staffId: context.staffId,
+            scopeType: scope?.type ?? 'global',
+            scopeRef: scopeRef(scope),
+            question: message,
+            answer,
+            toolsUsed,
+            ok,
+            errorMessage,
+            model: getOpenRouterModel(),
+            latencyMs: Date.now() - started,
+          }),
+        )
+        .catch((error) => {
+          console.error('[admin-prompt] Failed to write Ask AI log.', error);
+        });
+    };
 
     try {
-      const reply = await chat({
-        adapter,
-        systemPrompts,
-        messages,
-        tools,
-        stream: false,
-        agentLoopStrategy: maxIterations(scope ? 2 : 6),
-      });
-      return { reply: extractChatReply(reply) };
+      if (!message) {
+        throw new Error('Enter a question before sending.');
+      }
+
+      if (isAdminPromptActionRequest(message)) {
+        answer = ADMIN_PROMPT_ACTION_REFUSAL;
+        return { reply: answer };
+      }
+
+      if (!isOpenRouterConfigured()) {
+        throw new Error('OpenRouter is not configured. Add OPENROUTER_API_KEY to your .env file.');
+      }
+
+      const { buildAdminPromptOpsPulse } = await import(
+        '@backend/server/admin/admin-prompt-context-repo.server'
+      );
+      const { createAdminPromptServerTools } = await import(
+        '@backend/server/admin/admin-prompt-tools.server'
+      );
+
+      const [pulse, focusedRecord] = await Promise.all([
+        scope ? Promise.resolve(null) : buildAdminPromptOpsPulse(),
+        scope
+          ? loadFocusedPromptRecord(scope).catch((error) => {
+              console.error('[admin-prompt] Failed to load scoped record.', error);
+              return JSON.stringify({
+                ...scope,
+                notFound: true,
+                error: 'The focused record could not be loaded.',
+              });
+            })
+          : Promise.resolve(null),
+      ]);
+      const history = (data.history ?? [])
+        .filter((turn) => turn.content.trim())
+        .slice(scope ? -6 : -8)
+        .map((turn) => ({
+          role: turn.role,
+          content: turn.content.trim(),
+        }));
+
+      const adapter = getOpenRouterChatAdapter();
+      const systemPrompts = [
+        buildAdminPromptSystemPrompt(
+          pulse ? formatOpsPulse(pulse) : null,
+          data.customContext,
+          focusedRecord,
+        ),
+      ];
+      const messages = [...history, { role: 'user' as const, content: message }];
+      const tools = createAdminPromptServerTools(scope);
+      const tracker = createToolUseTracker();
+
+      try {
+        const reply = await chat({
+          adapter,
+          systemPrompts,
+          messages,
+          tools,
+          middleware: [tracker.middleware],
+          stream: false,
+          agentLoopStrategy: maxIterations(scope ? 2 : 6),
+        });
+        toolsUsed.push(...tracker.names);
+        answer = extractChatReply(reply);
+        return { reply: answer };
+      } catch (error) {
+        console.error('[admin-prompt] Tool-enabled chat failed; retrying without tools.', error);
+        const reply = await chat({
+          adapter,
+          systemPrompts,
+          messages,
+          stream: false,
+        });
+        answer = extractChatReply(reply);
+        return { reply: answer };
+      }
     } catch (error) {
-      console.error('[admin-prompt] Tool-enabled chat failed; retrying without tools.', error);
-      const reply = await chat({
-        adapter,
-        systemPrompts,
-        messages,
-        stream: false,
-      });
-      return { reply: extractChatReply(reply) };
+      ok = false;
+      errorMessage = error instanceof Error ? error.message : 'Ask AI failed.';
+      throw error;
+    } finally {
+      writeLog();
     }
   });

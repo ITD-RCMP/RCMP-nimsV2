@@ -13,7 +13,8 @@
     "mailpit": "docker compose -f docker-compose.mailpit.yml up",
     "mailpit:down": "docker compose -f docker-compose.mailpit.yml down",
     "overdue-emails": "npx tsx backend/scripts/run-overdue-return-emails.ts",
-    "ai:reindex": "npx tsx backend/scripts/ai-reindex-embeddings.ts"
+    "ai:reindex": "npx tsx backend/scripts/ai-reindex-embeddings.ts",
+    "ai:golden": "npx tsx backend/scripts/ai-golden-questions.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
