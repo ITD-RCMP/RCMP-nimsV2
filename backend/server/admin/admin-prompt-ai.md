@@ -56,3 +56,21 @@ If tool-calling with the current OpenRouter chat model fails, chat retries **wit
 - Asset detail (`/admin/asset/$kind/$assetId` and `/technician/asset/$kind/$assetId`)
 - Technician requests expand panel
 - Technician request log detail dialog
+
+## Guardrails
+
+Ask AI is read-only. Imperative requests to approve, reject, checkout, delete, dispose, or change status are blocked on the server before the model runs, and the system prompt repeats the same rule. “How do I approve…?” still goes to the model so it can point at the UI.
+
+## Turn log
+
+Each `adminPromptChatFn` call writes one row to MySQL `admin_prompt_log` (created on first use): staff, scope, question, answer, tools used, ok/error, chat model, latency. Log failures never fail the chat reply. Secrets are not stored.
+
+## Golden questions
+
+Print the 10-question smoke checklist (and run guardrail unit checks):
+
+```bash
+npm run ai:golden
+```
+
+Work through the printed questions in staff Ask AI before calling the feature done. Question 7 needs `npm run ai:reindex` if you want messy-text search.

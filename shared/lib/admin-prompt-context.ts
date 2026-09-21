@@ -37,7 +37,7 @@ RULES:
 3. Never attempt to generate or execute SQL yourself. You only read data that has been provided to you via tool calls.
 4. Do not disclose other users' personal contact details (email/phone) unless the requester is confirmed as admin/technician role.
 5. Keep answers concise and specific — prefer a direct answer over a lecture.
-6. If asked to perform an action (approve request, change status, delete asset), explain that you cannot perform actions directly and direct the user to the correct page/button in the system.`;
+6. You cannot perform actions. Never claim you approved, rejected, deleted, checked out, returned, or changed a status. If asked to do so, refuse and direct the user to the Requests page (checkout / return / reject), the asset page (status and edit), or Disposal (pre-dispose / dispose).`;
 
 export function buildAdminPromptReplyContext(customContext?: string): string {
   const trimmed = customContext?.trim();
@@ -191,4 +191,30 @@ export function extractMacCandidates(text: string): string[] {
   }
 
   return [...macs].slice(0, 3);
+}
+
+export const ADMIN_PROMPT_ACTION_REFUSAL =
+  'I cannot perform that action. Approve, reject, checkout, return, status changes, and deletions have to be done in the system: use the buttons on the Requests page, the asset page, or Disposal.';
+
+const HOW_TO_RE =
+  /\b(how|where)\s+(do|can|to|would|should)\b|\bwhich\s+(page|button|screen)\b|\bwho\s+can\b/i;
+
+const ACTION_RE = new RegExp(
+  [
+    String.raw`\b(approve|reject|deny)\b.{0,48}\brequest\b`,
+    String.raw`\brequest\b.{0,32}\b(approve|reject|deny)\b`,
+    String.raw`\b(delete|remove)\b.{0,40}\b(asset|request|record|laptop|equipment)\b`,
+    String.raw`\b(check\s*out|checkout)\b.{0,40}\brequest\b`,
+    String.raw`\brequest\b.{0,32}\b(check\s*out|checkout)\b`,
+    String.raw`\b(dispose|pre-?dispose)\b.{0,40}\b(asset|laptop|equipment)\b`,
+    String.raw`\b(change|update|set)\b.{0,24}\bstatus\b`,
+    String.raw`\bmark\b.{0,24}\b(returned|disposed|pre-?disposed|approved|rejected)\b`,
+  ].join('|'),
+  'i',
+);
+
+export function isAdminPromptActionRequest(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed || HOW_TO_RE.test(trimmed)) return false;
+  return ACTION_RE.test(trimmed);
 }
