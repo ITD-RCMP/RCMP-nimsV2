@@ -1,12 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { AdminPromptPage } from '@/admin/prompt';
+import { createFileRoute, Navigate } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/admin/prompt')({
-  head: () => ({
-    meta: [
-      { title: 'Ask AI | NIMS' },
-      { name: 'description', content: 'Chat with the NIMS inventory assistant.' },
-    ],
-  }),
-  component: AdminPromptPage,
+  component: () => <Navigate to="/admin/dashboard" />,
 });

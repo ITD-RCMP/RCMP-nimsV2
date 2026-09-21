@@ -1,18 +1,15 @@
 import { useEffect, type ReactNode } from 'react';
-import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AdminSideBar } from '@/components/ui/adminSidebar';
-import { AskAiLink } from '@/components/ask-ai-link';
 import { Toaster } from '@/components/ui/sonner';
+import { AdminDock } from '@/admin/admin-dock';
 import { clearAllSessions, getPostLoginPath, hasAdminSession, readPrivilegedSession } from '@shared/lib/auth-session';
-import { AssetLookupButton } from '@/technician/asset-lookup';
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const showAskAi = pathname !== '/admin/prompt' && !pathname.startsWith('/admin/prompt/');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -62,16 +59,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="relative w-full flex-1 px-4 pb-5 pt-8 sm:px-6 sm:pb-6 sm:pt-10 md:px-8">
-          {showAskAi ? (
-            <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-5 md:right-8">
-              <AskAiLink to="/admin/prompt" />
-            </div>
-          ) : null}
-          {children}
-        </main>
+        <main className="relative w-full flex-1 px-4 pb-28 pt-8 sm:px-6 sm:pb-28 sm:pt-10 md:px-8">{children}</main>
+        <AdminDock />
       </div>
-      <AssetLookupButton variant="admin" />
       <Toaster />
     </div>
   );
