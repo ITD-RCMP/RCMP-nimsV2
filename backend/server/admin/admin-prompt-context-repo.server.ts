@@ -222,11 +222,11 @@ async function findAssetIdsBySerial(serial: string): Promise<{ kind: AssetKind; 
   const pool = getDbPool();
   const pattern = `%${serial.trim()}%`;
   const [rows] = await pool.query<(RowDataPacket & { kind: AssetKind; asset_id: number })[]>(
-    `SELECT 'laptop' AS kind, asset_id FROM laptop WHERE serial_num LIKE ? LIMIT 3
+    ` (SELECT 'laptop' AS kind, asset_id FROM laptop WHERE serial_num LIKE ? LIMIT 3)
      UNION ALL
-     SELECT 'av' AS kind, asset_id FROM av WHERE serial_num LIKE ? LIMIT 3
+     (SELECT 'av' AS kind, asset_id FROM av WHERE serial_num LIKE ? LIMIT 3)
      UNION ALL
-     SELECT 'network' AS kind, asset_id FROM network WHERE serial_num LIKE ? LIMIT 3`,
+     (SELECT 'network' AS kind, asset_id FROM network WHERE serial_num LIKE ? LIMIT 3)`,
     [pattern, pattern, pattern],
   );
   return rows.map((row) => ({ kind: row.kind, assetId: Number(row.asset_id) }));

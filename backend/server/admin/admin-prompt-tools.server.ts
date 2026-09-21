@@ -125,7 +125,7 @@ function resolveCalendar(input?: { year?: number; month?: number }) {
   };
 }
 
-export function createAdminPromptServerTools() {
+export function createAdminPromptServerTools(mode: 'global' | 'asset' | 'request' = 'global') {
   const getInventorySummary = toolDefinition({
     name: 'getInventorySummary',
     description:
@@ -266,6 +266,13 @@ export function createAdminPromptServerTools() {
       ),
     }),
   }).server(async () => getAssetStatusReference());
+
+  if (mode === 'asset') {
+    return [lookupAsset, lookupRequest, listOpenRepairs, getStatusReference];
+  }
+  if (mode === 'request') {
+    return [lookupRequest, lookupAsset, getStatusReference];
+  }
 
   return [
     getInventorySummary,

@@ -1,6 +1,10 @@
 import { chat, maxIterations } from '@tanstack/ai';
 import { createServerFn } from '@tanstack/react-start';
-import { buildAdminPromptSystemPrompt } from '@shared/lib/admin-prompt-context';
+import {
+  buildAdminPromptSystemPrompt,
+  parseAdminPromptScope,
+  type AdminPromptScope,
+} from '@shared/lib/admin-prompt-context';
 import { staffMiddleware } from '@backend/server/core/auth-middleware';
 import { getOpenRouterChatAdapter, isOpenRouterConfigured } from '@backend/lib/openrouter';
 
@@ -38,6 +42,54 @@ function formatOpsPulse(pulse: {
   ].join('\n');
 }
 
+async function loadFocusedPromptRecord(scope: AdminPromptScope) {
+    const { lookupRequestForPrompt, loadOpenRepairs } = await import(
+    '@backend/server/admin/admin-prompt-context-repo.server'
+  );
+
+  if (scope.type === 'asset') {
+    const { findAssetByAnyId } = await import('@backend/server/assets/assets-repo.server');
+    const detail = await findAssetByAnyId(scope.assetId);
+    const numericId = Number(scope.assetId);
+    const openRepairs =
+      Number.isInteger(numericId) && numericId > 0
+        ? await loadOpenRepairs({ assetKind: scope.kind, assetId: numericId, limit: 5 })
+        : [];
+    const asset = detail
+      ? {
+          assetId: detail.asset.assetId,
+          kind: detail.asset.kind,
+          serialNum: detail.asset.serialNum,
+          status: detail.asset.statusName,
+          brand: detail.asset.brand,
+          model: detail.asset.model,
+        }
+      : null;
+    return JSON.stringify(
+      {
+        kind: scope.kind,
+        assetId: scope.assetId,
+        asset,
+        notFound: !asset,
+        openRepairs,
+      },
+      null,
+      2,
+    );
+  }
+
+  const lookup = await lookupRequestForPrompt(scope.requestId);
+  return JSON.stringify(
+    {
+      requestId: scope.requestId,
+      found: lookup.found,
+      request: lookup.request,
+    },
+    null,
+    2,
+  );
+}
+
 export const adminPromptChatFn = createServerFn({ method: 'POST' })
   .middleware([staffMiddleware])
   .inputValidator(
@@ -45,6 +97,7 @@ export const adminPromptChatFn = createServerFn({ method: 'POST' })
       message: string;
       history?: PromptChatTurn[];
       customContext?: string;
+      scope?: AdminPromptScope;
     }) => data,
   )
   .handler(async ({ data }) => {
@@ -57,6 +110,7 @@ export const adminPromptChatFn = createServerFn({ method: 'POST' })
       throw new Error('OpenRouter is not configured. Add OPENROUTER_API_KEY to your .env file.');
     }
 
+    const scope = parseAdminPromptScope(data.scope);
     const { buildAdminPromptOpsPulse } = await import(
       '@backend/server/admin/admin-prompt-context-repo.server'
     );
@@ -64,10 +118,22 @@ export const adminPromptChatFn = createServerFn({ method: 'POST' })
       '@backend/server/admin/admin-prompt-tools.server'
     );
 
-    const pulse = await buildAdminPromptOpsPulse();
+    const [pulse, focusedRecord] = await Promise.all([
+      scope ? Promise.resolve(null) : buildAdminPromptOpsPulse(),
+      scope
+        ? loadFocusedPromptRecord(scope).catch((error) => {
+            console.error('[admin-prompt] Failed to load scoped record.', error);
+            return JSON.stringify({
+              ...scope,
+              notFound: true,
+              error: 'The focused record could not be loaded.',
+            });
+          })
+        : Promise.resolve(null),
+    ]);
     const history = (data.history ?? [])
       .filter((turn) => turn.content.trim())
-      .slice(-8)
+      .slice(scope ? -6 : -8)
       .map((turn) => ({
         role: turn.role,
         content: turn.content.trim(),
@@ -75,10 +141,14 @@ export const adminPromptChatFn = createServerFn({ method: 'POST' })
 
     const adapter = getOpenRouterChatAdapter();
     const systemPrompts = [
-      buildAdminPromptSystemPrompt(formatOpsPulse(pulse), data.customContext),
+      buildAdminPromptSystemPrompt(
+        pulse ? formatOpsPulse(pulse) : null,
+        data.customContext,
+        focusedRecord,
+      ),
     ];
     const messages = [...history, { role: 'user' as const, content: message }];
-    const tools = createAdminPromptServerTools();
+    const tools = createAdminPromptServerTools(scope?.type ?? 'global');
 
     try {
       const reply = await chat({
@@ -87,7 +157,7 @@ export const adminPromptChatFn = createServerFn({ method: 'POST' })
         messages,
         tools,
         stream: false,
-        agentLoopStrategy: maxIterations(6),
+        agentLoopStrategy: maxIterations(scope ? 2 : 6),
       });
       return { reply: extractChatReply(reply) };
     } catch (error) {

@@ -44,17 +44,71 @@ export function buildAdminPromptReplyContext(customContext?: string): string {
   return trimmed || DEFAULT_ADMIN_PROMPT_CUSTOM_CONTEXT;
 }
 
+export type AdminPromptAssetScope = {
+  type: 'asset';
+  kind: 'laptop' | 'av' | 'network';
+  assetId: number | string;
+};
+
+export type AdminPromptRequestScope = {
+  type: 'request';
+  requestId: number;
+};
+
+export type AdminPromptScope = AdminPromptAssetScope | AdminPromptRequestScope;
+
+export function parseAdminPromptScope(scope: unknown): AdminPromptScope | undefined {
+  if (!scope || typeof scope !== 'object') return undefined;
+  const value = scope as Record<string, unknown>;
+  if (value.type === 'asset') {
+    const kind = value.kind;
+    if (kind !== 'laptop' && kind !== 'av' && kind !== 'network') return undefined;
+    const assetId = value.assetId;
+    if (typeof assetId === 'number' && Number.isInteger(assetId) && assetId > 0) {
+      return { type: 'asset', kind, assetId };
+    }
+    if (typeof assetId === 'string' && assetId.trim()) {
+      const trimmed = assetId.trim();
+      const asNumber = Number(trimmed);
+      return {
+        type: 'asset',
+        kind,
+        assetId: Number.isInteger(asNumber) && asNumber > 0 ? asNumber : trimmed,
+      };
+    }
+    return undefined;
+  }
+  if (value.type === 'request') {
+    const raw = value.requestId;
+    const requestId =
+      typeof raw === 'number' ? raw : Number(String(raw ?? '').replace(/\D/g, ''));
+    if (!Number.isInteger(requestId) || requestId <= 0) return undefined;
+    return { type: 'request', requestId };
+  }
+  return undefined;
+}
+
 export function buildAdminPromptSystemPrompt(
   opsPulse?: string | null,
   customContext?: string,
+  focusedRecord?: string | null,
 ): string {
   const replyContext = buildAdminPromptReplyContext(customContext);
   const pulse = opsPulse?.trim();
+  const focused = focusedRecord?.trim();
+  const focusedInstructions = focused
+    ? `
+
+This conversation is scoped to ONE record. Stay on that record. The focused record JSON is already loaded — use it first. You may make at most one or two tool calls for a closely related lookup (linked request, assigned asset, repairs). If the user asks fleet-wide inventory or unrelated records, tell them to use the main Ask AI page instead.
+
+Focused record:
+${focused}`
+    : '';
 
   return `${BASE_SYSTEM_PROMPT}
 
 Custom reply instructions:
-${replyContext}${pulse ? `\n\nSmall ops pulse (live counts only; use tools for lists and lookups):\n${pulse}` : ''}`;
+${replyContext}${pulse ? `\n\nSmall ops pulse (live counts only; use tools for lists and lookups):\n${pulse}` : ''}${focusedInstructions}`;
 }
 
 export function readStoredAdminPromptContext(): string {
