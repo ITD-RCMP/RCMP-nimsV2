@@ -1,10 +1,14 @@
 # Admin Prompt AI (Ask AI)
 
-Staff-only assistant used from Ask AI and the admin dock. The OpenRouter model is unchanged (`getOpenRouterChatAdapter()` / `OPENROUTER_MODEL` / default `poolside/laguna-xs-2.1:free`).
+Staff-only assistant used from Ask AI, the admin dock, and scoped “Ask about this” sheets on asset/request detail. The OpenRouter model is unchanged (`getOpenRouterChatAdapter()` / `OPENROUTER_MODEL` / default `poolside/laguna-xs-2.1:free`).
 
 ## How it works
 
-Each question gets a **small ops pulse** (checked-out count, overdue count, open-repair count, active request count) plus a slim system prompt. The model must call **read-only server tools** for lists and lookups. The full inventory JSON snapshot is no longer injected into the prompt.
+Global Ask AI: each question gets a **small ops pulse** (checked-out count, overdue count, open-repair count, active request count) plus a slim system prompt. The model must call **read-only server tools** for lists and lookups.
+
+Scoped Ask AI (`scope` on `adminPromptChatFn`): pre-loads **one** asset or request, skips the fleet ops pulse, and only registers a few related tools (max 2 tool-loop iterations). Closing the sheet clears that panel’s history.
+
+The full inventory JSON snapshot is never injected into the prompt.
 
 Tools run only inside `adminPromptChatFn` behind `staffMiddleware`. They never create, update, or delete records.
 
@@ -23,4 +27,10 @@ Tools run only inside `adminPromptChatFn` behind `staffMiddleware`. They never c
 
 ## Failure mode
 
-If tool-calling with the current OpenRouter model fails, chat retries **without tools** but still uses the slim prompt and ops pulse. It does not fall back to dumping the full database snapshot.
+If tool-calling with the current OpenRouter model fails, chat retries **without tools** but still uses the slim prompt (and focused record when scoped). It does not fall back to dumping the full database snapshot.
+
+## Scoped entry points
+
+- Asset detail (`/admin/asset/$kind/$assetId` and `/technician/asset/$kind/$assetId`)
+- Technician requests expand panel
+- Technician request log detail dialog
