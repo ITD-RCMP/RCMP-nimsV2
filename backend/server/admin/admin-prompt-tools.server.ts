@@ -1,5 +1,5 @@
 import { toolDefinition } from '@tanstack/ai';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import type { AdminPromptScope } from '@shared/lib/admin-prompt-context';
 import {
   getAssetStatusReference,
