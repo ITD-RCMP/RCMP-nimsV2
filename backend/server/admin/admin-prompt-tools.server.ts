@@ -1,5 +1,6 @@
 import { toolDefinition } from '@tanstack/ai';
 import { z } from 'zod/v4';
+import type { AdminPromptScope } from '@shared/lib/admin-prompt-context';
 import {
   getAssetStatusReference,
   loadExpiringWarranties,
@@ -125,7 +126,8 @@ function resolveCalendar(input?: { year?: number; month?: number }) {
   };
 }
 
-export function createAdminPromptServerTools(mode: 'global' | 'asset' | 'request' = 'global') {
+export function createAdminPromptServerTools(scope?: AdminPromptScope) {
+  const mode = scope?.type ?? 'global';
   const getInventorySummary = toolDefinition({
     name: 'getInventorySummary',
     description:
@@ -267,11 +269,73 @@ export function createAdminPromptServerTools(mode: 'global' | 'asset' | 'request
     }),
   }).server(async () => getAssetStatusReference());
 
+  const messySourceTypeSchema = z.enum(['repair', 'warranty_claim', 'request', 'faq']);
+  const searchMessyText = toolDefinition({
+    name: 'searchMessyText',
+    description:
+      'Search past repair remarks, warranty claims, request remarks, and FAQ notes by meaning. Use for vague issues, similar problems, or “have we seen this before”. Do not use for exact asset ids, serials, MACs, or request ids.',
+    inputSchema: z.object({
+      query: z.string().min(1).describe('Free-text description of the issue or remark to search.'),
+      limit: z.number().int().min(1).max(10).optional().describe('Max snippets. Default 5, max 10.'),
+      sourceTypes: z
+        .array(messySourceTypeSchema)
+        .optional()
+        .describe('Limit to these corpora. Defaults depend on chat scope.'),
+    }),
+    outputSchema: z.object({
+      configured: z.boolean(),
+      indexed: z.number(),
+      message: z.string().nullable(),
+      results: z.array(
+        z.object({
+          sourceType: messySourceTypeSchema,
+          sourceId: z.string(),
+          assetKind: z.string().nullable(),
+          assetId: z.string().nullable(),
+          requestId: z.number().nullable(),
+          score: z.number(),
+          snippet: z.string(),
+          occurredAt: z.string().nullable(),
+        }),
+      ),
+    }),
+  }).server(async (input) => {
+    const { searchMessyText: search } = await import(
+      '@backend/server/admin/admin-prompt-embeddings-repo.server'
+    );
+    const sourceTypes =
+      input.sourceTypes && input.sourceTypes.length > 0
+        ? input.sourceTypes
+        : mode === 'asset'
+          ? (['repair', 'warranty_claim'] as const)
+          : mode === 'request'
+            ? (['request', 'repair', 'warranty_claim'] as const)
+            : undefined;
+    try {
+      return await search({
+        query: input.query,
+        limit: input.limit,
+        sourceTypes: sourceTypes ? [...sourceTypes] : undefined,
+        assetKind: scope?.type === 'asset' ? scope.kind : undefined,
+        assetId: scope?.type === 'asset' ? scope.assetId : undefined,
+        requestId: scope?.type === 'request' ? scope.requestId : undefined,
+      });
+    } catch (error) {
+      console.error('[admin-prompt] searchMessyText failed.', error);
+      return {
+        configured: false,
+        indexed: 0,
+        results: [],
+        message: 'Semantic search is unavailable right now.',
+      };
+    }
+  });
+
   if (mode === 'asset') {
-    return [lookupAsset, lookupRequest, listOpenRepairs, getStatusReference];
+    return [lookupAsset, lookupRequest, listOpenRepairs, getStatusReference, searchMessyText];
   }
   if (mode === 'request') {
-    return [lookupRequest, lookupAsset, getStatusReference];
+    return [lookupRequest, lookupAsset, getStatusReference, searchMessyText];
   }
 
   return [
@@ -283,5 +347,6 @@ export function createAdminPromptServerTools(mode: 'global' | 'asset' | 'request
     listOpenRepairs,
     listExpiringWarranties,
     getStatusReference,
+    searchMessyText,
   ];
 }
