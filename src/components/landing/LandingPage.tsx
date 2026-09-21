@@ -20,6 +20,7 @@ import { MICROSOFT_OAUTH_STATE_KEY } from '@/auth/microsoft-callback-page';
 import type { LandingStatusLevel, LandingSystemStatus } from '@shared/lib/landing-status-types';
 import { getLandingSystemStatusFn } from '@backend/server/operations/landing-status.functions';
 import { getMicrosoftLoginUrlFn } from '@backend/server/auth/auth.functions';
+import { REQUEST_IT_EMAIL } from '@shared/lib/request-email-types';
 import { cn } from '@/lib/utils';
 
 const STATUS_DOT: Record<LandingStatusLevel, string> = {
@@ -312,10 +313,37 @@ export function LandingPage() {
           </div>
         </section>
 
-        <footer className="px-6 py-4 sm:px-10">
-          <div className="mx-auto flex max-w-6xl items-center justify-between">
-            <NimsLogo size="sm" variant="light" />
-            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} University Kuala Lumpur Royal College of Medicine. All rights reserved.</p>
+        <footer className="border-t border-border/60 bg-background px-6 py-10 sm:px-10 sm:py-12">
+          <div className="mx-auto flex max-w-6xl flex-col gap-10 sm:flex-row sm:items-start sm:justify-between sm:gap-16">
+            <div className="min-w-0 max-w-md">
+              <NimsLogo size="sm" variant="light" />
+              <p className="mt-4 text-sm font-semibold tracking-[-0.01em] text-foreground">
+                Nexcheck Inventory Management System
+              </p>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                IT Department · Universiti Kuala Lumpur Royal College of Medicine Perak
+              </p>
+              <p className="mt-3 text-xs text-muted-foreground">
+                © {new Date().getFullYear()} Universiti Kuala Lumpur. All rights reserved.
+              </p>
+            </div>
+            <div className="shrink-0 sm:text-right">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Contact
+              </p>
+              <a
+                href={`mailto:${REQUEST_IT_EMAIL}`}
+                className="mt-3 block text-sm font-medium text-foreground transition-colors hover:text-foreground/70"
+              >
+                {REQUEST_IT_EMAIL}
+              </a>
+              <a
+                href="https://itd.rcmp.edu.my/feedback"
+                className="mt-2 block text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Submit feedback
+              </a>
+            </div>
           </div>
         </footer>
       </div>

@@ -1,8 +1,8 @@
 import type { RowDataPacket } from 'mysql2';
 import { assetIdNewestYearFirstSql } from '@/hooks/assetid-generator';
 import type { LandingSampleAsset, LandingStatusRow, LandingSystemStatus } from '@shared/lib/landing-status-types';
-import { isEmailConfigured, isMailpitMode } from '@backend/lib/microsoft-email-config';
-import { getDbPool, formatDatabaseError } from '@backend/server/core/db';
+import { isEmailConfigured } from '@backend/lib/microsoft-email-config';
+import { getDbPool } from '@backend/server/core/db';
 
 type SampleRow = RowDataPacket & {
   kind: string;
@@ -24,49 +24,14 @@ function formatFetchedAt(): string {
   });
 }
 
-async function pingDatabase(): Promise<{ ok: boolean; message: string }> {
+async function pingDatabase(): Promise<boolean> {
   try {
     const pool = getDbPool();
     await pool.query('SELECT 1');
-    const db = process.env.MYSQL_DATABASE ?? 'nimsV2';
-    return { ok: true, message: `Connected · ${db}` };
-  } catch (e) {
-    return { ok: false, message: formatDatabaseError(e) };
+    return true;
+  } catch {
+    return false;
   }
-}
-
-async function loadCounts(): Promise<{
-  laptop: number;
-  av: number;
-  network: number;
-  staff: number;
-  openRequests: number;
-}> {
-  const pool = getDbPool();
-  const [rows] = await pool.query<
-    (RowDataPacket & {
-      laptop: number;
-      av: number;
-      network: number;
-      staff: number;
-      open_requests: number;
-    })[]
-  >(
-    `SELECT
-      (SELECT COUNT(*) FROM laptop) AS laptop,
-      (SELECT COUNT(*) FROM av) AS av,
-      (SELECT COUNT(*) FROM network) AS network,
-      (SELECT COUNT(*) FROM staff) AS staff,
-      (SELECT COUNT(*) FROM request WHERE rejected_at IS NULL) AS open_requests`,
-  );
-  const r = rows[0];
-  return {
-    laptop: Number(r?.laptop ?? 0),
-    av: Number(r?.av ?? 0),
-    network: Number(r?.network ?? 0),
-    staff: Number(r?.staff ?? 0),
-    openRequests: Number(r?.open_requests ?? 0),
-  };
 }
 
 async function loadSampleAssets(): Promise<LandingSampleAsset[]> {
@@ -111,59 +76,28 @@ async function loadSampleAssets(): Promise<LandingSampleAsset[]> {
   });
 }
 
-function buildStatusRows(
-  db: { ok: boolean; message: string },
-  counts: Awaited<ReturnType<typeof loadCounts>>,
-): LandingStatusRow[] {
-  const totalAssets = counts.laptop + counts.av + counts.network;
-  const emailConfigured = isEmailConfigured();
+function statusValue(ok: boolean): { value: 'Connected' | 'Unavailable'; level: 'ok' | 'error' } {
+  return ok ? { value: 'Connected', level: 'ok' } : { value: 'Unavailable', level: 'error' };
+}
+
+function buildStatusRows(dbOk: boolean): LandingStatusRow[] {
+  const data = statusValue(dbOk);
 
   return [
-    {
-      key: 'database',
-      label: 'Database',
-      value: db.ok ? db.message : 'Offline',
-      level: db.ok ? 'ok' : 'error',
-    },
-    {
-      key: 'email',
-      label: 'Email notifications',
-      value: emailConfigured
-        ? isMailpitMode()
-          ? 'Configured · local test mail'
-          : 'Configured · ready to send'
-        : 'Not configured — contact IT to enable',
-      level: emailConfigured ? 'ok' : 'warn',
-    },
-    {
-      key: 'assets',
-      label: 'Assets registered',
-      value: `${totalAssets} total · ${counts.laptop} laptop · ${counts.av} AV · ${counts.network} network`,
-      level: totalAssets > 0 ? 'ok' : 'neutral',
-    },
-    {
-      key: 'staff',
-      label: 'Staff directory',
-      value: `${counts.staff} records`,
-      level: counts.staff > 0 ? 'ok' : 'neutral',
-    },
-    {
-      key: 'requests',
-      label: 'Borrow requests',
-      value: `${counts.openRequests} active (not rejected)`,
-      level: 'neutral',
-    },
+    { key: 'database', label: 'Database', ...data },
+    { key: 'email', label: 'Email notifications', ...statusValue(isEmailConfigured()) },
+    { key: 'assets', label: 'Assets registered', ...data },
+    { key: 'staff', label: 'Staff directory', ...data },
+    { key: 'requests', label: 'Borrow requests', ...data },
   ];
 }
 
 export async function getLandingSystemStatus(): Promise<LandingSystemStatus> {
-  const db = await pingDatabase();
-  let counts = { laptop: 0, av: 0, network: 0, staff: 0, openRequests: 0 };
+  const dbOk = await pingDatabase();
   let sampleAssets: LandingSampleAsset[] = [];
 
-  if (db.ok) {
+  if (dbOk) {
     try {
-      counts = await loadCounts();
       sampleAssets = await loadSampleAssets();
     } catch {
       sampleAssets = [];
@@ -172,7 +106,7 @@ export async function getLandingSystemStatus(): Promise<LandingSystemStatus> {
 
   return {
     fetchedAt: formatFetchedAt(),
-    rows: buildStatusRows(db, counts),
+    rows: buildStatusRows(dbOk),
     sampleAssets,
   };
 }

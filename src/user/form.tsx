@@ -30,7 +30,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -128,7 +127,6 @@ export function UserRequestFormPage() {
 
   const profileComplete = session != null && isUserProfileComplete(session);
 
-  const progress = ((step + 1) / STEPS.length) * 100;
 
   const canContinue = useMemo(() => {
     if (step === 0) return slaAccepted;
@@ -278,9 +276,7 @@ export function UserRequestFormPage() {
           </p>
         </div>
 
-        <StepIndicator currentStep={step} />
-
-        <Progress value={progress} className="mb-6 h-1.5" />
+        <StepIndicator currentStep={step} onSelectCompleted={setStep} />
 
         <Card className="rounded-[16px] border-border shadow-sm">
           <CardHeader className="pb-4">
@@ -364,39 +360,81 @@ export function UserRequestFormPage() {
   );
 }
 
-function StepIndicator({ currentStep }: { currentStep: number }) {
+function StepIndicator({
+  currentStep,
+  onSelectCompleted,
+}: {
+  currentStep: number;
+  onSelectCompleted: (index: number) => void;
+}) {
   return (
-    <ol className="mb-4 grid grid-cols-4 gap-1 sm:gap-2">
-      {STEPS.map((s, i) => {
-        const Icon = s.icon;
-        const done = i < currentStep;
-        const active = i === currentStep;
-        return (
-          <li
-            key={s.id}
-            className={cn(
-              'flex flex-col items-center gap-1 rounded-[10px] border px-1 py-2 text-center sm:px-2',
-              active && 'border-[oklch(0.45_0.12_290)] bg-lavender/10',
-              done && !active && 'border-emerald-200 bg-emerald-50/80',
-              !active && !done && 'border-border bg-card',
-            )}
-          >
+    <nav aria-label="Request progress" className="mb-7">
+      <ol className="flex">
+        {STEPS.map((s, i) => {
+          const Icon = s.icon;
+          const done = i < currentStep;
+          const active = i === currentStep;
+          const marker = (
             <span
               className={cn(
-                'flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold',
-                active && 'bg-[oklch(0.45_0.12_290)] text-white',
-                done && !active && 'bg-emerald-600 text-white',
-                !active && !done && 'bg-muted text-muted-foreground',
+                'relative z-[1] flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-colors duration-200',
+                active && 'bg-[oklch(0.45_0.12_290)] text-white ring-4 ring-[oklch(0.45_0.12_290)]/20',
+                done && !active && 'bg-[oklch(0.45_0.12_290)] text-white',
+                !active && !done && 'border border-border bg-card text-muted-foreground',
               )}
             >
-              {done && !active ? <Check className="h-3.5 w-3.5" /> : i + 1}
+              {done && !active ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : i + 1}
             </span>
-            <span className="hidden text-[10px] font-medium sm:block">{s.label}</span>
-            <Icon className="h-3.5 w-3.5 text-muted-foreground sm:hidden" aria-hidden />
-          </li>
-        );
-      })}
-    </ol>
+          );
+
+          return (
+            <li key={s.id} className="flex min-w-0 flex-1 flex-col items-center">
+              <div className="relative flex h-8 w-full items-center justify-center">
+                {i > 0 ? (
+                  <span
+                    className={cn(
+                      'absolute right-1/2 left-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full transition-colors duration-200',
+                      i <= currentStep ? 'bg-[oklch(0.45_0.12_290)]' : 'bg-border',
+                    )}
+                    aria-hidden
+                  />
+                ) : null}
+                {i < STEPS.length - 1 ? (
+                  <span
+                    className={cn(
+                      'absolute left-1/2 right-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full transition-colors duration-200',
+                      i < currentStep ? 'bg-[oklch(0.45_0.12_290)]' : 'bg-border',
+                    )}
+                    aria-hidden
+                  />
+                ) : null}
+                {done ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelectCompleted(i)}
+                    className="relative z-[1] rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`Go back to ${s.label}`}
+                  >
+                    {marker}
+                  </button>
+                ) : (
+                  <span aria-current={active ? 'step' : undefined}>{marker}</span>
+                )}
+              </div>
+              <span
+                className={cn(
+                  'mt-2 flex items-center gap-1 text-[11px] font-medium',
+                  active ? 'text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                <Icon className="hidden h-3 w-3 sm:block" aria-hidden />
+                {s.label}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 
