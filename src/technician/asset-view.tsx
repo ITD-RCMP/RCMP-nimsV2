@@ -44,7 +44,6 @@ import { formatPurchaseCost } from '@shared/lib/purchase-field-utils';
 import { cn } from '@/lib/utils';
 import { AssetStatusBadge } from '@/technician/asset-status-badge';
 import { AssetStatusActions } from '@/technician/asset-status-actions';
-import { ScopedAskAiButton } from '@/prompt/scoped-ask-ai';
 import { AssetDetailsForm } from '@/technician/asset-details-form';
 import { TechnicianShell } from '@/technician/technician-shell';
 import { getAssetDetailFn } from '@backend/server/assets/assets.functions';
@@ -504,14 +503,6 @@ export function AssetViewContent({
               ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <ScopedAskAiButton
-                target={{
-                  type: 'asset',
-                  kind,
-                  assetId: asset.assetId,
-                  serialNum: asset.serialNum,
-                }}
-              />
               {allowEdit && !editing ? (
                 <Button
                   type="button"

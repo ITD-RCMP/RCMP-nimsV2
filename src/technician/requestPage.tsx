@@ -91,8 +91,6 @@ import {
 } from '@backend/server/requests/request.functions';
 import { RequestReturnFields } from '@/technician/request-return-fields';
 import { RequestToolbarActions } from '@/technician/request-toolbar-actions';
-import { ScopedAskAiButton } from '@/prompt/scoped-ask-ai';
-
 function whatsappChatHref(phone: string): string | null {
   const digits = phone.replace(/\D/g, '');
   if (digits.length < 8) return null;
@@ -1170,14 +1168,6 @@ export function TechnicianRequestPage() {
           )}
 
           <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
-            <ScopedAskAiButton
-              target={{
-                type: 'request',
-                requestId: req.requestId,
-                requesterName: req.requesterName,
-              }}
-              label="Ask about this request"
-            />
             {awaitingReturn.length > 0 && (
               <Button
                 type="button"

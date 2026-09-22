@@ -388,7 +388,7 @@ function AssetForm({
             Add {ASSET_KIND_LABEL[kind]}
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-            Switch between assets in the list. Only one form is open at a time.
+            Fill one asset at a time. Use the rail to switch or add more.
           </p>
         </div>
         <Button variant="outline" size="sm" className="rounded-[8px]" asChild>
@@ -397,17 +397,7 @@ function AssetForm({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm font-medium text-foreground">
-            {entries.length} {entries.length === 1 ? 'asset' : 'assets'} in this batch
-          </p>
-          <Button type="button" variant="outline" size="sm" className="rounded-[8px] gap-1.5" onClick={addEntry}>
-            <Plus className="h-3.5 w-3.5" />
-            Add another
-          </Button>
-        </div>
-
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        <div className="flex items-center gap-1 overflow-x-auto rounded-[12px] border border-border bg-muted/40 p-1">
           {entries.map((entry, index) => {
             const summary = entrySummary(entry, index);
             const active = entry.key === selected.key;
@@ -417,24 +407,35 @@ function AssetForm({
                 type="button"
                 onClick={() => setSelectedKey(entry.key)}
                 className={cn(
-                  'min-w-[148px] max-w-[200px] shrink-0 rounded-[10px] border px-3 py-2 text-left transition-colors',
+                  'flex min-w-[160px] max-w-[220px] shrink-0 items-center gap-2.5 rounded-[9px] px-2.5 py-1.5 text-left transition-colors',
                   active
-                    ? 'border-foreground bg-foreground text-background'
-                    : 'border-border bg-card text-foreground hover:bg-muted/60',
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-background/60 hover:text-foreground',
                 )}
               >
-                <span className="block truncate text-xs font-semibold">{summary.title}</span>
                 <span
                   className={cn(
-                    'mt-0.5 block truncate text-[11px]',
-                    active ? 'text-background/70' : 'text-muted-foreground',
+                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums',
+                    active ? 'bg-foreground text-background' : 'bg-background text-muted-foreground',
                   )}
                 >
-                  {summary.subtitle}
+                  {index + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-xs font-medium text-foreground">{summary.title}</span>
+                  <span className="block truncate text-[11px] text-muted-foreground">{summary.subtitle}</span>
                 </span>
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={addEntry}
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-[9px] px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add
+          </button>
         </div>
 
         {selected ? (
