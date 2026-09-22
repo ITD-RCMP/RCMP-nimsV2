@@ -30,12 +30,20 @@ import {
 } from '@/lib/warranty-field-utils';
 import {
   ASSET_ID_PREFIX,
+  ASSET_ID_SEQUENCE_MAX,
   canonicalizeLaptopCategory,
+  composeAssetId,
+  formatAssetId,
   getAssetIdYearDigits,
   getLaptopAssetIdPrefix,
+  getPrefixForKind,
   isKnownLaptopCategory,
+  isValidAssetTag,
   LAPTOP_CATEGORY_OPTIONS,
+  normalizeAssetTag,
+  parseAssetId,
 } from '@/hooks/assetid-generator';
+import { useNextAssetId } from '@/hooks/use-next-asset-id';
 import { cn } from '@/lib/utils';
 import { TechnicianShell } from '@/technician/technician-shell';
 import { LaptopCategoryFields } from '@/technician/laptop-category-fields';
@@ -71,6 +79,7 @@ type AssetEntry = {
   assetIdOld: string;
   macAddress: string;
   ipAddress: string;
+  tagging: string;
   purchase: PurchaseFormState;
   warranty: WarrantyFormState;
 };
@@ -104,6 +113,7 @@ function newEntry(kind: AssetKind): AssetEntry {
     assetIdOld: '',
     macAddress: '',
     ipAddress: '',
+    tagging: '',
     purchase: emptyPurchaseFormState(),
     warranty: emptyWarrantyFormState(),
   };
@@ -213,11 +223,13 @@ function AssetForm({
   onBack: () => void;
   onCreated: (kind: AssetKind, count: number) => void;
   bulkCreateLaptop: (
-    rows: Array<Omit<CreateLaptopInput, 'assetId'> & { assetId?: number }>,
+    rows: Array<Omit<CreateLaptopInput, 'assetId'> & { assetId?: string | number; tagging?: string | null }>,
   ) => Promise<number>;
-  bulkCreateAv: (rows: Array<Omit<CreateAvInput, 'assetId'> & { assetId?: number }>) => Promise<number>;
+  bulkCreateAv: (
+    rows: Array<Omit<CreateAvInput, 'assetId'> & { assetId?: string | number; tagging?: string | null }>,
+  ) => Promise<number>;
   bulkCreateNetwork: (
-    rows: Array<Omit<CreateNetworkInput, 'assetId'> & { assetId?: number }>,
+    rows: Array<Omit<CreateNetworkInput, 'assetId'> & { assetId?: string | number; tagging?: string | null }>,
   ) => Promise<number>;
 }) {
   const [saving, setSaving] = useState(false);
@@ -266,6 +278,14 @@ function AssetForm({
         setSelectedKey(entry.key);
         return;
       }
+      const tagging = normalizeAssetTag(entry.tagging);
+      if (tagging && !isValidAssetTag(tagging)) {
+        toast.error(
+          `Tagging on asset ${i + 1} is optional. Use 1–16 letters, numbers, hyphens, or underscores.`,
+        );
+        setSelectedKey(entry.key);
+        return;
+      }
       const warranty = warrantyFormToInput(entry.warranty);
       const hasWarrantyPartial =
         Boolean(coerceToIsoDate(entry.warranty.startDate)) ||
@@ -307,6 +327,7 @@ function AssetForm({
             ...purchaseFormToInput(entry.purchase),
             statusId,
             remarks: entry.remarks.trim() || null,
+            tagging: normalizeAssetTag(entry.tagging) || null,
             warranty: warrantyFormToInput(entry.warranty),
           })),
         );
@@ -323,6 +344,7 @@ function AssetForm({
             ...purchaseFormToInput(entry.purchase),
             statusId,
             remarks: entry.remarks.trim() || null,
+            tagging: normalizeAssetTag(entry.tagging) || null,
             warranty: warrantyFormToInput(entry.warranty),
           })),
         );
@@ -340,6 +362,7 @@ function AssetForm({
             ...purchaseFormToInput(entry.purchase),
             statusId,
             remarks: entry.remarks.trim() || null,
+            tagging: normalizeAssetTag(entry.tagging) || null,
             warranty: warrantyFormToInput(entry.warranty),
           })),
         );
@@ -419,6 +442,7 @@ function AssetForm({
             kind={kind}
             index={Math.max(0, selectedIndex)}
             entry={selected}
+            sequenceOffset={assetSequenceOffset(kind, entries, Math.max(0, selectedIndex))}
             canRemove={entries.length > 1}
             onChange={(patch) => updateEntry(selected.key, patch)}
             onRemove={() => removeEntry(selected.key)}
@@ -446,10 +470,34 @@ function AssetForm({
   );
 }
 
+function assetSequenceOffset(kind: AssetKind, entries: AssetEntry[], index: number): number {
+  const current = prefixForEntry(kind, entries[index]?.category ?? '');
+  if (current == null) return 0;
+  return entries
+    .slice(0, index)
+    .filter((entry) => prefixForEntry(kind, entry.category) === current).length;
+}
+
+function prefixForEntry(kind: AssetKind, category: string): number | null {
+  try {
+    return getPrefixForKind(kind, { category });
+  } catch {
+    return null;
+  }
+}
+
+function offsetAssetId(base: number, offset: number): number | null {
+  const { prefix, year, sequence } = parseAssetId(base);
+  const next = sequence + offset;
+  if (next > ASSET_ID_SEQUENCE_MAX) return null;
+  return formatAssetId(prefix, year, next);
+}
+
 function AssetEntryCard({
   kind,
   index,
   entry,
+  sequenceOffset,
   canRemove,
   onChange,
   onRemove,
@@ -457,33 +505,65 @@ function AssetEntryCard({
   kind: AssetKind;
   index: number;
   entry: AssetEntry;
+  sequenceOffset: number;
   canRemove: boolean;
   onChange: (patch: Partial<AssetEntry>) => void;
   onRemove: () => void;
 }) {
   const statusId = STATUS_ID.NEW;
   const hint = assetIdHint(kind, entry.category);
+  const { assetId, isLoading } = useNextAssetId(kind, kind === 'laptop' ? entry.category : undefined);
+  const numericId = assetId == null ? null : offsetAssetId(assetId, sequenceOffset);
+  const tagging = normalizeAssetTag(entry.tagging);
+  const taggingInvalid = Boolean(tagging) && !isValidAssetTag(tagging);
+  let assetIdPreview = hint;
+  if (isLoading) assetIdPreview = 'Generating…';
+  else if (numericId != null) {
+    assetIdPreview = taggingInvalid ? String(numericId) : composeAssetId(numericId, tagging);
+  }
 
   return (
     <Card className="rounded-[14px] border-border shadow-sm">
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-4">
-        <div className="space-y-1">
+      <CardHeader className="space-y-4 pb-4">
+        <div className="flex flex-row items-start justify-between gap-3">
           <CardTitle className="text-base">Asset {index + 1}</CardTitle>
-          <CardDescription className="font-mono text-[11px]">
-            ID auto on save · {hint}
-          </CardDescription>
+          {canRemove ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-[8px] px-2 text-muted-foreground hover:text-destructive"
+              onClick={onRemove}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          ) : null}
         </div>
-        {canRemove ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 rounded-[8px] px-2 text-muted-foreground hover:text-destructive"
-            onClick={onRemove}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        ) : null}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Asset ID">
+            <Input
+              value={assetIdPreview}
+              disabled
+              readOnly
+              className="rounded-[8px] font-mono disabled:opacity-100"
+            />
+            <p className="text-[11px] text-muted-foreground">Assigned on save. This field cannot be edited.</p>
+          </Field>
+          <Field label="Tagging">
+            <Input
+              value={entry.tagging}
+              onChange={(e) => onChange({ tagging: e.target.value })}
+              className="rounded-[8px]"
+              placeholder="RMK"
+              maxLength={16}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {taggingInvalid
+                ? 'Use 1–16 letters, numbers, hyphens, or underscores.'
+                : 'Optional. Leave blank, or add a short tag. It is saved in brackets, for example 1226001 (RMK).'}
+            </p>
+          </Field>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <section className="space-y-4">

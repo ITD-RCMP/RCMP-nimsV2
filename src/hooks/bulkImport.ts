@@ -18,7 +18,7 @@ import {
   type CreateLaptopInput,
   type CreateNetworkInput,
 } from '@shared/lib/inventory-schema';
-import { canonicalizeLaptopCategory, getLaptopAssetIdPrefix, LAPTOP_CATEGORY_OPTIONS } from '@/hooks/assetid-generator';
+import { canonicalizeLaptopCategory, composeAssetId, getLaptopAssetIdPrefix, isValidAssetTag, LAPTOP_CATEGORY_OPTIONS, normalizeAssetTag, STORED_ASSET_ID_PATTERN } from '@/hooks/assetid-generator';
 import { parseOptionalDate, parsePurchaseFromRow } from '@shared/lib/purchase-field-utils';
 import { parseWarrantyFromRow } from '@/lib/warranty-field-utils';
 import {
@@ -29,16 +29,19 @@ import {
 
 export type BulkLaptopImportRow = Omit<CreateLaptopInput, 'assetId'> & {
   assetId?: string | number;
+  tagging?: string | null;
   handover?: BulkLaptopHandoverImport;
 };
 
 export type BulkAvImportRow = Omit<CreateAvInput, 'assetId'> & {
-  assetId?: number;
+  assetId?: string | number;
+  tagging?: string | null;
   deployment?: BulkPlaceDeploymentImport;
 };
 
 export type BulkNetworkImportRow = Omit<CreateNetworkInput, 'assetId'> & {
-  assetId?: number;
+  assetId?: string | number;
+  tagging?: string | null;
   deployment?: BulkPlaceDeploymentImport;
 };
 
@@ -85,6 +88,7 @@ const MOCK_CSV: Record<AssetKind, string> = {
   laptop: toCsv(BULK_IMPORT_COLUMNS.laptop, [
     {
       acc_code: '200-0500',
+      tagging: 'RMK',
       serial_num: 'DL-5450-001',
       brand: 'Dell',
       model: 'Latitude 5450',
@@ -192,6 +196,7 @@ const MOCK_CSV: Record<AssetKind, string> = {
   av: toCsv(BULK_IMPORT_COLUMNS.av, [
     {
       acc_code: '200-0500',
+      asset_id: '8826001 (HALL)',
       asset_id_old: 'AV-LEG-001',
       category: 'display',
       brand: 'Samsung',
@@ -225,6 +230,7 @@ const MOCK_CSV: Record<AssetKind, string> = {
   network: toCsv(BULK_IMPORT_COLUMNS.network, [
     {
       acc_code: '200-0500',
+      tagging: 'RACK',
       category: 'switch',
       serial_num: 'CS-9200-24P',
       brand: 'Cisco',
@@ -265,6 +271,7 @@ const HEADER_ALIASES: Record<string, string> = {
   acccode: 'acc_code',
   accountcode: 'acc_code',
   assetid: 'asset_id',
+  tagging: 'tagging',
   assetidold: 'asset_id_old',
   serialnum: 'serial_num',
   serialnumber: 'serial_num',
@@ -385,40 +392,47 @@ function requireCell(row: string[], index: number | undefined, name: string, row
   return val;
 }
 
-const LAPTOP_ASSET_ID_MAX_LENGTH = 32;
-
-/** Blank cell → auto-generate on import; otherwise use provided numeric ID. */
 function parseOptionalAssetId(
-  raw: string,
-  rowNum: number,
-  errors: BulkImportRowError[],
-): number | undefined {
-  const val = raw?.trim() ?? '';
-  if (!val) return undefined;
-  const n = Number(val);
-  if (Number.isNaN(n) || n <= 0) {
-    errors.push({ row: rowNum, message: 'The asset ID must be a positive number, or leave blank to auto-generate one.' });
-    return undefined;
-  }
-  return n;
-}
-
-/** Blank cell → auto-generate on import; otherwise keep the varchar asset ID. */
-function parseOptionalLaptopAssetId(
   raw: string,
   rowNum: number,
   errors: BulkImportRowError[],
 ): string | undefined {
   const val = raw?.trim() ?? '';
   if (!val) return undefined;
-  if (val.length > LAPTOP_ASSET_ID_MAX_LENGTH) {
+  if (val.length > 32 || !STORED_ASSET_ID_PATTERN.test(val)) {
     errors.push({
       row: rowNum,
-      message: `The asset ID must be at most ${LAPTOP_ASSET_ID_MAX_LENGTH} characters, or leave blank to auto-generate one.`,
+      message: 'Asset ID must look like 1226001 or 1226001 (RMK), or leave it blank to auto-generate one.',
     });
     return undefined;
   }
   return val;
+}
+
+function parseOptionalTagging(
+  raw: string,
+  rowNum: number,
+  errors: BulkImportRowError[],
+): string | null {
+  const tag = normalizeAssetTag(raw);
+  if (!tag) return null;
+  if (!isValidAssetTag(tag)) {
+    errors.push({
+      row: rowNum,
+      message: 'Tagging is optional. Use 1–16 letters, numbers, hyphens, or underscores, such as RMK.',
+    });
+    return null;
+  }
+  try {
+    composeAssetId('1226001', tag);
+  } catch (e) {
+    errors.push({
+      row: rowNum,
+      message: e instanceof Error ? e.message : 'Tagging is not valid.',
+    });
+    return null;
+  }
+  return tag;
 }
 
 function optionalCell(row: string[], index: number | undefined) {
@@ -649,7 +663,8 @@ function parseLaptopRows(headers: string[], rows: string[][]) {
   rows.forEach((row, i) => {
     const rowNum = i + 2;
     warnIfColumnsShifted(row, col, rowNum, errors);
-    const assetId = parseOptionalLaptopAssetId(row[col.get('asset_id')!] ?? '', rowNum, errors);
+    const assetId = parseOptionalAssetId(row[col.get('asset_id')!] ?? '', rowNum, errors);
+    const tagging = parseOptionalTagging(row[col.get('tagging')!] ?? '', rowNum, errors);
     const accCode = parseAccCode(row[col.get('acc_code')!] ?? '', rowNum, errors);
     const serialNum = requireCell(row, col.get('serial_num')!, 'serial_num', rowNum, errors);
     const rawCategory = requireCell(row, col.get('category')!, 'category', rowNum, errors);
@@ -683,6 +698,7 @@ function parseLaptopRows(headers: string[], rows: string[][]) {
 
     laptopRows.push({
       ...(assetId !== undefined ? { assetId } : {}),
+      ...(tagging ? { tagging } : {}),
       accCode,
       serialNum,
       brand: optionalCell(row, col.get('brand')!),
@@ -720,6 +736,7 @@ function parseAvRows(headers: string[], rows: string[][]) {
     const rowNum = i + 2;
     warnIfColumnsShifted(row, col, rowNum, errors);
     const assetId = parseOptionalAssetId(row[col.get('asset_id')!] ?? '', rowNum, errors);
+    const tagging = parseOptionalTagging(row[col.get('tagging')!] ?? '', rowNum, errors);
     const accCode = parseAccCode(row[col.get('acc_code')!] ?? '', rowNum, errors);
     const statusId = parseStatusId(requireCell(row, col.get('status_id')!, 'status_id', rowNum, errors), rowNum, errors);
     const purchase = parsePurchaseFromRow(row, col, rowNum, errors);
@@ -732,6 +749,7 @@ function parseAvRows(headers: string[], rows: string[][]) {
 
     avRows.push({
       ...(assetId !== undefined ? { assetId } : {}),
+      ...(tagging ? { tagging } : {}),
       accCode,
       assetIdOld: optionalCell(row, col.get('asset_id_old')!),
       category: optionalCell(row, col.get('category')!),
@@ -764,6 +782,7 @@ function parseNetworkRows(headers: string[], rows: string[][]) {
     const rowNum = i + 2;
     warnIfColumnsShifted(row, col, rowNum, errors);
     const assetId = parseOptionalAssetId(row[col.get('asset_id')!] ?? '', rowNum, errors);
+    const tagging = parseOptionalTagging(row[col.get('tagging')!] ?? '', rowNum, errors);
     const accCode = parseAccCode(row[col.get('acc_code')!] ?? '', rowNum, errors);
     const statusId = parseStatusId(requireCell(row, col.get('status_id')!, 'status_id', rowNum, errors), rowNum, errors);
     const purchase = parsePurchaseFromRow(row, col, rowNum, errors);
@@ -776,6 +795,7 @@ function parseNetworkRows(headers: string[], rows: string[][]) {
 
     networkRows.push({
       ...(assetId !== undefined ? { assetId } : {}),
+      ...(tagging ? { tagging } : {}),
       accCode,
       category: optionalCell(row, col.get('category')!),
       serialNum: optionalCell(row, col.get('serial_num')!),

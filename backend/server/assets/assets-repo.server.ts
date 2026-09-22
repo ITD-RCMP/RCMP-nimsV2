@@ -38,7 +38,13 @@ import {
 } from '@shared/lib/asset-status-actions';
 import { coerceToIsoDate, formatIsoToDdMmYy, sqlDateToIso } from '@shared/lib/date-format';
 import { purchaseSqlParams } from '@shared/lib/purchase-field-utils';
-import { assetIdNewestYearFirstSql, canonicalizeLaptopCategory } from '@/hooks/assetid-generator';
+import {
+  assetIdNewestYearFirstSql,
+  assetIdNumericCore,
+  canonicalizeLaptopCategory,
+  composeAssetId,
+  normalizeAssetTag,
+} from '@/hooks/assetid-generator';
 import { allocateAssetIdsFromDb } from '@backend/server/assets/asset-id.server';
 import {
   getDisposalDashboardStatsFromTables,
@@ -54,22 +60,33 @@ import { insertWarranty } from '@backend/server/requests/warranty-repair-repo.se
 
 export type BulkLaptopImportRow = Omit<CreateLaptopInput, 'assetId'> & {
   assetId?: string | number;
+  tagging?: string | null;
   handover?: BulkLaptopHandoverImport;
 };
 
-function hasProvidedLaptopAssetId(assetId: string | number | undefined): assetId is string | number {
+function hasProvidedAssetId(assetId: string | number | undefined): assetId is string | number {
   if (assetId == null) return false;
   if (typeof assetId === 'number') return Number.isFinite(assetId) && assetId > 0;
   return assetId.trim().length > 0;
 }
 
+function storedAssetId(assetId: string | number, tagging?: string | null): string {
+  const raw = String(assetId).trim();
+  const tag = normalizeAssetTag(tagging);
+  if (!tag) return raw;
+  const core = assetIdNumericCore(raw);
+  return composeAssetId(core ?? raw, tag);
+}
+
 export type BulkAvImportRow = Omit<CreateAvInput, 'assetId'> & {
-  assetId?: number;
+  assetId?: string | number;
+  tagging?: string | null;
   deployment?: BulkPlaceDeploymentImport;
 };
 
 export type BulkNetworkImportRow = Omit<CreateNetworkInput, 'assetId'> & {
-  assetId?: number;
+  assetId?: string | number;
+  tagging?: string | null;
   deployment?: BulkPlaceDeploymentImport;
 };
 
@@ -79,15 +96,15 @@ async function fillLaptopAssetIds(rows: BulkLaptopImportRow[]): Promise<BulkLapt
     if (!category) throw new Error('Category is required.');
     return { ...row, category };
   });
-  const autoCategories = normalized.filter((r) => !hasProvidedLaptopAssetId(r.assetId)).map((r) => r.category);
+  const autoCategories = normalized.filter((r) => !hasProvidedAssetId(r.assetId)).map((r) => r.category);
   const generated =
     autoCategories.length > 0
       ? await allocateAssetIdsFromDb({ kind: 'laptop', laptopCategories: autoCategories })
       : [];
   let genIdx = 0;
   return normalized.map((row) => {
-    if (hasProvidedLaptopAssetId(row.assetId)) {
-      return row;
+    if (hasProvidedAssetId(row.assetId)) {
+      return { ...row, assetId: storedAssetId(row.assetId, row.tagging) };
     }
     const assetId = generated[genIdx++];
     if (assetId == null) {
@@ -95,18 +112,18 @@ async function fillLaptopAssetIds(rows: BulkLaptopImportRow[]): Promise<BulkLapt
         'A new asset ID could not be generated for this laptop. Try again, or contact support if this keeps happening.',
       );
     }
-    return { ...row, assetId };
+    return { ...row, assetId: storedAssetId(assetId, row.tagging) };
   });
 }
 
 async function fillAvAssetIds(rows: BulkAvImportRow[]): Promise<BulkAvImportRow[]> {
-  const needCount = rows.filter((r) => r.assetId == null || r.assetId <= 0).length;
+  const needCount = rows.filter((r) => !hasProvidedAssetId(r.assetId)).length;
   const generated =
     needCount > 0 ? await allocateAssetIdsFromDb({ kind: 'av', count: needCount }) : [];
   let genIdx = 0;
   return rows.map((row) => {
-    if (row.assetId != null && row.assetId > 0) {
-      return row;
+    if (hasProvidedAssetId(row.assetId)) {
+      return { ...row, assetId: storedAssetId(row.assetId, row.tagging) };
     }
     const assetId = generated[genIdx++];
     if (assetId == null) {
@@ -114,18 +131,18 @@ async function fillAvAssetIds(rows: BulkAvImportRow[]): Promise<BulkAvImportRow[
         'A new asset ID could not be generated for this AV item. Try again, or contact support if this keeps happening.',
       );
     }
-    return { ...row, assetId };
+    return { ...row, assetId: storedAssetId(assetId, row.tagging) };
   });
 }
 
 async function fillNetworkAssetIds(rows: BulkNetworkImportRow[]): Promise<BulkNetworkImportRow[]> {
-  const needCount = rows.filter((r) => r.assetId == null || r.assetId <= 0).length;
+  const needCount = rows.filter((r) => !hasProvidedAssetId(r.assetId)).length;
   const generated =
     needCount > 0 ? await allocateAssetIdsFromDb({ kind: 'network', count: needCount }) : [];
   let genIdx = 0;
   return rows.map((row) => {
-    if (row.assetId != null && row.assetId > 0) {
-      return row;
+    if (hasProvidedAssetId(row.assetId)) {
+      return { ...row, assetId: storedAssetId(row.assetId, row.tagging) };
     }
     const assetId = generated[genIdx++];
     if (assetId == null) {
@@ -133,7 +150,7 @@ async function fillNetworkAssetIds(rows: BulkNetworkImportRow[]): Promise<BulkNe
         'A new asset ID could not be generated for this network item. Try again, or contact support if this keeps happening.',
       );
     }
-    return { ...row, assetId };
+    return { ...row, assetId: storedAssetId(assetId, row.tagging) };
   });
 }
 
@@ -679,7 +696,7 @@ export async function bulkCreateLaptops(rows: BulkLaptopImportRow[], registeredB
     await conn.beginTransaction();
     for (const row of rows) {
       const { handover, assetId, warranty, ...laptop } = row;
-      if (!hasProvidedLaptopAssetId(assetId)) {
+      if (!hasProvidedAssetId(assetId)) {
         throw new Error(
           'An asset ID could not be assigned after generation. Try saving again, or contact support if this keeps happening.',
         );
@@ -707,7 +724,7 @@ export async function bulkCreateAv(rows: BulkAvImportRow[]) {
     await conn.beginTransaction();
     for (const row of rows) {
       const { deployment, assetId, warranty, ...av } = row;
-      if (assetId == null || assetId <= 0) {
+      if (!hasProvidedAssetId(assetId)) {
         throw new Error(
           'An asset ID could not be assigned after generation. Try saving again, or contact support if this keeps happening.',
         );
@@ -735,7 +752,7 @@ export async function bulkCreateNetwork(rows: BulkNetworkImportRow[]) {
     await conn.beginTransaction();
     for (const row of rows) {
       const { deployment, assetId, warranty, ...network } = row;
-      if (assetId == null || assetId <= 0) {
+      if (!hasProvidedAssetId(assetId)) {
         throw new Error(
           'An asset ID could not be assigned after generation. Try saving again, or contact support if this keeps happening.',
         );

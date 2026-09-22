@@ -21,7 +21,10 @@ const TABLE_BY_KIND: Record<AssetKind, string> = {
 async function queryMaxAssetIdInRange(table: string, min: number, max: number): Promise<number | null> {
   const pool = getDbPool();
   const [rows] = await pool.query<MaxRow[]>(
-    `SELECT MAX(asset_id) AS max_id FROM \`${table}\` WHERE asset_id BETWEEN ? AND ?`,
+    `SELECT MAX(CAST(SUBSTRING_INDEX(asset_id, ' ', 1) AS UNSIGNED)) AS max_id
+     FROM \`${table}\`
+     WHERE SUBSTRING_INDEX(asset_id, ' ', 1) REGEXP '^[0-9]+$'
+       AND CAST(SUBSTRING_INDEX(asset_id, ' ', 1) AS UNSIGNED) BETWEEN ? AND ?`,
     [min, max],
   );
   const maxId = rows[0]?.max_id;
