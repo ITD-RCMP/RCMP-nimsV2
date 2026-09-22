@@ -196,6 +196,9 @@ export function extractMacCandidates(text: string): string[] {
 export const ADMIN_PROMPT_ACTION_REFUSAL =
   'I cannot perform that action. Approve, reject, checkout, return, status changes, and deletions have to be done in the system: use the buttons on the Requests page, the asset page, or Disposal.';
 
+export const ADMIN_PROMPT_UNAVAILABLE_REPLY =
+  "Sorry — I couldn't put together a useful answer just now. Please try again in a moment, or rephrase with a specific ask about an asset, request, repair, or warranty.";
+
 const HOW_TO_RE =
   /\b(how|where)\s+(do|can|to|would|should)\b|\bwhich\s+(page|button|screen)\b|\bwho\s+can\b/i;
 

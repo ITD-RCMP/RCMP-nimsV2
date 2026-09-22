@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { SessionUser } from '@shared/lib/auth-session';
 import { cn } from '@/lib/utils';
 import { adminPromptChatFn } from '@backend/server/admin/admin-prompt.functions';
+import { ADMIN_PROMPT_UNAVAILABLE_REPLY } from '@shared/lib/admin-prompt-context';
 import chatbotAnimation from '@/assets/talking-robot-chatbot.json';
 
 type ChatRole = 'assistant' | 'user';
@@ -294,26 +295,26 @@ export function PromptChatPage({ Shell, getSession, sessionExpiredMessage }: Pro
         },
       });
 
+      const reply = result.reply?.trim() || ADMIN_PROMPT_UNAVAILABLE_REPLY;
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: result.reply,
+        content: reply,
       };
 
       conversationHistoryRef.current = [
         ...conversationHistoryRef.current,
         { role: 'user' as const, content },
-        { role: 'assistant' as const, content: result.reply },
+        { role: 'assistant' as const, content: reply },
       ].slice(-8);
 
       setMessages([userMessage, assistantMessage]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to get a response.';
-      toast.error(message);
+      toast.error(error instanceof Error ? error.message : 'Failed to get a response.');
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: `Sorry, I could not answer that. ${message}`,
+        content: ADMIN_PROMPT_UNAVAILABLE_REPLY,
       };
       setMessages([userMessage, assistantMessage]);
     } finally {

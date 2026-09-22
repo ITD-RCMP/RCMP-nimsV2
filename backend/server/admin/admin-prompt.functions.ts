@@ -2,6 +2,7 @@ import { chat, defineChatMiddleware, maxIterations } from '@tanstack/ai';
 import { createServerFn } from '@tanstack/react-start';
 import {
   ADMIN_PROMPT_ACTION_REFUSAL,
+  ADMIN_PROMPT_UNAVAILABLE_REPLY,
   buildAdminPromptSystemPrompt,
   isAdminPromptActionRequest,
   parseAdminPromptScope,
@@ -30,6 +31,12 @@ function extractChatReply(reply: unknown): string {
     if (typeof record.reply === 'string') return record.reply.trim();
   }
   return String(reply ?? '').trim();
+}
+
+function finalizeChatReply(reply: unknown): { text: string; empty: boolean } {
+  const text = extractChatReply(reply);
+  if (text) return { text, empty: false };
+  return { text: ADMIN_PROMPT_UNAVAILABLE_REPLY, empty: true };
 }
 
 function formatOpsPulse(pulse: {
@@ -164,7 +171,10 @@ export const adminPromptChatFn = createServerFn({ method: 'POST' })
       }
 
       if (!isOpenRouterConfigured()) {
-        throw new Error('OpenRouter is not configured. Add OPENROUTER_API_KEY to your .env file.');
+        ok = false;
+        errorMessage = 'OpenRouter is not configured';
+        answer = ADMIN_PROMPT_UNAVAILABLE_REPLY;
+        return { reply: answer };
       }
 
       const { buildAdminPromptOpsPulse } = await import(
@@ -218,23 +228,51 @@ export const adminPromptChatFn = createServerFn({ method: 'POST' })
           agentLoopStrategy: maxIterations(scope ? 2 : 6),
         });
         toolsUsed.push(...tracker.names);
-        answer = extractChatReply(reply);
+        const finalized = finalizeChatReply(reply);
+        answer = finalized.text;
+        if (finalized.empty) {
+          ok = false;
+          errorMessage = 'Empty model reply';
+        }
         return { reply: answer };
       } catch (error) {
         console.error('[admin-prompt] Tool-enabled chat failed; retrying without tools.', error);
-        const reply = await chat({
-          adapter,
-          systemPrompts,
-          messages,
-          stream: false,
-        });
-        answer = extractChatReply(reply);
-        return { reply: answer };
+        try {
+          const reply = await chat({
+            adapter,
+            systemPrompts,
+            messages,
+            stream: false,
+          });
+          const finalized = finalizeChatReply(reply);
+          answer = finalized.text;
+          if (finalized.empty) {
+            ok = false;
+            errorMessage = 'Empty model reply after toolless retry';
+          }
+          return { reply: answer };
+        } catch (retryError) {
+          console.error('[admin-prompt] Toolless chat retry failed.', retryError);
+          ok = false;
+          errorMessage =
+            retryError instanceof Error
+              ? retryError.message
+              : error instanceof Error
+                ? error.message
+                : 'Ask AI failed.';
+          answer = ADMIN_PROMPT_UNAVAILABLE_REPLY;
+          return { reply: answer };
+        }
       }
     } catch (error) {
       ok = false;
       errorMessage = error instanceof Error ? error.message : 'Ask AI failed.';
-      throw error;
+      if (errorMessage === 'Enter a question before sending.') {
+        throw error;
+      }
+      console.error('[admin-prompt] Ask AI failed.', error);
+      answer = ADMIN_PROMPT_UNAVAILABLE_REPLY;
+      return { reply: answer };
     } finally {
       writeLog();
     }
