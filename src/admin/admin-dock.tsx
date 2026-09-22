@@ -3,6 +3,7 @@ import { ArrowUp, Loader2, MoreHorizontal, SlidersHorizontal, Sparkles, Trash2 }
 import { toast } from 'sonner';
 import { adminPromptChatFn } from '@backend/server/admin/admin-prompt.functions';
 import { readAdminSession } from '@shared/lib/auth-session';
+import { ADMIN_PROMPT_UNAVAILABLE_REPLY } from '@shared/lib/admin-prompt-context';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -200,28 +201,28 @@ export function AdminDock() {
         },
       });
 
+      const reply = result.reply?.trim() || ADMIN_PROMPT_UNAVAILABLE_REPLY;
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: result.reply,
+        content: reply,
       };
 
       historyRef.current = [
         ...historyRef.current,
         { role: 'user' as const, content },
-        { role: 'assistant' as const, content: result.reply },
+        { role: 'assistant' as const, content: reply },
       ].slice(-8);
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to get a response.';
-      toast.error(message);
+      toast.error(error instanceof Error ? error.message : 'Failed to get a response.');
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: `Sorry, I could not answer that. ${message}`,
+          content: ADMIN_PROMPT_UNAVAILABLE_REPLY,
         },
       ]);
     } finally {
@@ -325,7 +326,7 @@ export function AdminDock() {
                     void handleSend();
                   }
                 }}
-                placeholder="Ask NIMS assistant..."
+                placeholder="Ask NIMS assistant (beta version)"
                 aria-label="Ask NIMS"
                 className="min-w-0 flex-1 bg-transparent px-2 text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-60"
               />

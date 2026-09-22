@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminPromptChatFn } from '@backend/server/admin/admin-prompt.functions';
-import type { AdminPromptScope } from '@shared/lib/admin-prompt-context';
+import {
+  ADMIN_PROMPT_UNAVAILABLE_REPLY,
+  type AdminPromptScope,
+} from '@shared/lib/admin-prompt-context';
 import { ASSET_KIND_LABEL, type AssetId, type AssetKind } from '@shared/lib/inventory-schema';
 import { readTechnicianSession } from '@shared/lib/auth-session';
 import { Button } from '@/components/ui/button';
@@ -187,26 +190,26 @@ export function ScopedAskAiSheet({
           scope,
         },
       });
+      const reply = result.reply?.trim() || ADMIN_PROMPT_UNAVAILABLE_REPLY;
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: result.reply,
+        content: reply,
       };
       historyRef.current = [
         ...historyRef.current,
         { role: 'user' as const, content },
-        { role: 'assistant' as const, content: result.reply },
+        { role: 'assistant' as const, content: reply },
       ].slice(-6);
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to get a response.';
-      toast.error(message);
+      toast.error(error instanceof Error ? error.message : 'Failed to get a response.');
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: `Sorry, I could not answer that. ${message}`,
+          content: ADMIN_PROMPT_UNAVAILABLE_REPLY,
         },
       ]);
     } finally {
