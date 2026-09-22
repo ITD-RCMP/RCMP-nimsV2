@@ -1,10 +1,8 @@
 /**
- * Asset ID format: PP + YY + SSS (no separators in storage; e.g. 1225001 = 12-25-001).
- * See assetid-flow.md for when each prefix applies.
+ * Asset ID format: PPYYSSS, optionally with a tag in parentheses.
+ * Example: 1226001, or 1226001 (RMK).
  */
-import { useCallback, useEffect, useState } from 'react';
 import type { AssetKind } from '@shared/lib/inventory-schema';
-import { getNextAssetIdFn } from '@backend/server/assets/assets.functions';
 
 export const ASSET_ID_PREFIX = {
   other: 10,
@@ -24,6 +22,47 @@ export const LAPTOP_CATEGORY_OTHERS = 'Others';
 
 export const ASSET_ID_SEQUENCE_MIN = 1;
 export const ASSET_ID_SEQUENCE_MAX = 999;
+export const ASSET_ID_MAX_LENGTH = 32;
+export const ASSET_TAG_MAX_LENGTH = 16;
+
+const ASSET_TAG_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
+const TAGGED_ASSET_ID_PATTERN = /^(\d+) \(([A-Za-z0-9][A-Za-z0-9_-]*)\)$/;
+export const STORED_ASSET_ID_PATTERN = /^(\d+)(?: \(([A-Za-z0-9][A-Za-z0-9_-]*)\))?$/;
+
+export function normalizeAssetTag(raw: string | null | undefined): string {
+  return (raw ?? '').trim();
+}
+
+export function isValidAssetTag(tag: string): boolean {
+  return tag.length > 0 && tag.length <= ASSET_TAG_MAX_LENGTH && ASSET_TAG_PATTERN.test(tag);
+}
+
+export function assetIdHasTag(assetId: string | number): boolean {
+  return TAGGED_ASSET_ID_PATTERN.test(String(assetId).trim());
+}
+
+export function composeAssetId(numericId: number | string, tagging?: string | null): string {
+  const core = String(numericId).trim();
+  const tag = normalizeAssetTag(tagging);
+  if (!tag) return core;
+  if (!isValidAssetTag(tag)) {
+    throw new Error(
+      `Tagging must be 1–${ASSET_TAG_MAX_LENGTH} letters, numbers, hyphens, or underscores.`,
+    );
+  }
+  const stored = `${core} (${tag})`;
+  if (stored.length > ASSET_ID_MAX_LENGTH) {
+    throw new Error(`Asset ID with tagging must be at most ${ASSET_ID_MAX_LENGTH} characters.`);
+  }
+  return stored;
+}
+
+export function assetIdNumericCore(assetId: string | number): number | null {
+  const match = String(assetId).trim().match(/^(\d+)/);
+  if (!match) return null;
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : null;
+}
 
 export type AssetIdParts = {
   prefix: number;
@@ -142,7 +181,7 @@ export function parseAssetId(assetId: number): AssetIdParts {
 }
 
 function isNumericAssetId(assetId: string | number): boolean {
-  return /^\d+$/.test(String(assetId));
+  return assetIdNumericCore(assetId) != null && /^\d+/.test(String(assetId).trim());
 }
 
 export function compareAssetIdNewestYearFirst(
@@ -158,21 +197,22 @@ export function compareAssetIdNewestYearFirst(
   if (!aNumeric) return 1;
   if (!bNumeric) return -1;
   const currentYear = getAssetIdYearDigits(now);
-  const yearA = parseAssetId(Number(a)).year;
-  const yearB = parseAssetId(Number(b)).year;
+  const yearA = parseAssetId(assetIdNumericCore(a) ?? 0).year;
+  const yearB = parseAssetId(assetIdNumericCore(b) ?? 0).year;
   const aCurrent = yearA === currentYear ? 0 : 1;
   const bCurrent = yearB === currentYear ? 0 : 1;
   if (aCurrent !== bCurrent) return aCurrent - bCurrent;
   if (yearA !== yearB) return yearB - yearA;
-  return Number(b) - Number(a);
+  return (assetIdNumericCore(b) ?? 0) - (assetIdNumericCore(a) ?? 0);
 }
 
 export function assetIdNewestYearFirstSql(column = 'asset_id'): string {
   const currentYear = getAssetIdYearDigits();
   const yy = String(currentYear).padStart(2, '0');
-  const numeric = `${column} REGEXP '^[0-9]+$'`;
-  const yearDigits = `SUBSTRING(${column}, GREATEST(CAST(LENGTH(${column}) AS SIGNED) - 4, 1), 2)`;
-  return `(CASE WHEN ${numeric} THEN 0 ELSE 1 END), (CASE WHEN ${numeric} AND ${yearDigits} = '${yy}' THEN 0 ELSE 1 END), (CASE WHEN ${numeric} THEN ${yearDigits} ELSE '00' END) DESC, ${column} DESC`;
+  const core = `SUBSTRING_INDEX(${column}, ' ', 1)`;
+  const numeric = `${core} REGEXP '^[0-9]+$'`;
+  const yearDigits = `SUBSTRING(${core}, GREATEST(CAST(LENGTH(${core}) AS SIGNED) - 4, 1), 2)`;
+  return `(CASE WHEN ${numeric} THEN 0 ELSE 1 END), (CASE WHEN ${numeric} AND ${yearDigits} = '${yy}' THEN 0 ELSE 1 END), (CASE WHEN ${numeric} THEN ${yearDigits} ELSE '00' END) DESC, ${core} DESC`;
 }
 
 export function getAssetIdRange(prefix: number, yearDigits: number): { min: number; max: number } {
@@ -253,43 +293,3 @@ export const LAPTOP_CATEGORY_SELECT_OPTIONS = [
   LAPTOP_CATEGORY_OTHERS,
 ] as const;
 
-/** Fetches the next asset_id from DB (single add-asset). Re-runs when kind or laptop category changes. */
-export function useNextAssetId(kind: AssetKind, laptopCategory?: string) {
-  const [assetId, setAssetId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const id = await getNextAssetIdFn({
-        data: {
-          kind,
-          category: kind === 'laptop' ? laptopCategory : undefined,
-        },
-      });
-      setAssetId(id);
-      return id;
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Failed to generate asset ID';
-      setError(message);
-      setAssetId(null);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [kind, laptopCategory]);
-
-  useEffect(() => {
-    if (kind === 'laptop' && !laptopCategory?.trim()) {
-      setAssetId(null);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-    void refetch();
-  }, [kind, laptopCategory, refetch]);
-
-  return { assetId, isLoading, error, refetch };
-}

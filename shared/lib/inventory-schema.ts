@@ -16,8 +16,9 @@ export function parseAssetKindParam(raw: unknown): AssetKind | null {
 export function parseAssetIdParam(raw: unknown): string | null {
   const assetId = String(raw ?? '').trim();
   if (!assetId || assetId.length > 32) return null;
-  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(assetId)) return null;
-  return assetId;
+  if (/^\d+(?: \([A-Za-z0-9][A-Za-z0-9_-]*\))?$/.test(assetId)) return assetId;
+  if (/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(assetId)) return assetId;
+  return null;
 }
 
 export function sameAssetId(a: AssetId, b: AssetId): boolean {
@@ -206,7 +207,7 @@ export type CreateLaptopInput = {
 } & PurchaseFields;
 
 export type CreateAvInput = {
-  assetId: number;
+  assetId: AssetId;
   accCode?: string | null;
   assetIdOld?: string | null;
   category?: string | null;
@@ -220,7 +221,7 @@ export type CreateAvInput = {
 } & PurchaseFields;
 
 export type CreateNetworkInput = {
-  assetId: number;
+  assetId: AssetId;
   accCode?: string | null;
   category?: string | null;
   serialNum?: string | null;
@@ -321,6 +322,7 @@ export type BulkPlaceDeploymentImport = {
 export const BULK_IMPORT_COLUMNS: Record<AssetKind, readonly string[]> = {
   laptop: [
     'asset_id',
+    'tagging',
     'acc_code',
     'serial_num',
     'brand',
@@ -344,6 +346,7 @@ export const BULK_IMPORT_COLUMNS: Record<AssetKind, readonly string[]> = {
   ],
   av: [
     'asset_id',
+    'tagging',
     'acc_code',
     'asset_id_old',
     'category',
@@ -361,6 +364,7 @@ export const BULK_IMPORT_COLUMNS: Record<AssetKind, readonly string[]> = {
   ],
   network: [
     'asset_id',
+    'tagging',
     'acc_code',
     'category',
     'serial_num',

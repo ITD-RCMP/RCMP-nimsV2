@@ -93,10 +93,10 @@ export function useAssets<K extends AssetKind>(kind: K) {
   const bulkCreate = useCallback(
     async (
       rows: K extends 'laptop'
-        ? Array<Omit<CreateLaptopInput, 'assetId'> & { assetId?: number }>
+        ? Array<Omit<CreateLaptopInput, 'assetId'> & { assetId?: string | number; tagging?: string | null }>
         : K extends 'av'
-          ? Array<Omit<CreateAvInput, 'assetId'> & { assetId?: number }>
-          : Array<Omit<CreateNetworkInput, 'assetId'> & { assetId?: number }>,
+          ? Array<Omit<CreateAvInput, 'assetId'> & { assetId?: string | number; tagging?: string | null }>
+          : Array<Omit<CreateNetworkInput, 'assetId'> & { assetId?: string | number; tagging?: string | null }>,
     ) => {
       let count = 0;
       if (kind === 'laptop') {
