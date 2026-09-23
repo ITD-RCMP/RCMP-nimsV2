@@ -233,7 +233,7 @@ export function LandingPage() {
                     University Kuala Lumpur Royal College of Medicine
                   </p>
                 </div>
-                <h1>
+                <h1 className="font-sans">
                   <span className="block bg-gradient-to-br from-foreground via-foreground to-[oklch(0.48_0.12_290)] bg-clip-text text-[2.5rem] font-extrabold leading-[1.02] tracking-[-0.04em] text-transparent sm:text-5xl md:text-6xl lg:text-[4.25rem]">
                     Nexcheck
                   </span>

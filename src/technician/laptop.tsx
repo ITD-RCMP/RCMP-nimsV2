@@ -64,9 +64,17 @@ function matchesLaptopCategory(category: string | null, view: LaptopCategoryView
 	return normalizeCategory(category ?? '') === normalizeCategory(view);
 }
 
-function handoverRecipient(asset: LaptopAsset): { name: string; kind: 'Staff' | 'Handler' } | null {
+function handoverRecipient(
+	asset: LaptopAsset,
+): { name: string; kind: string } | null {
 	const staff = asset.recipientName?.trim();
-	if (staff) return { name: staff, kind: 'Staff' };
+	if (staff) {
+		const division = asset.recipientDivision?.trim();
+		return {
+			name: staff,
+			kind: division ? `Staff · ${division}` : 'Staff',
+		};
+	}
 	const handler = asset.placeHandler?.trim();
 	if (handler) return { name: handler, kind: 'Handler' };
 	return null;

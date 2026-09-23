@@ -40,7 +40,7 @@ import {
   type ActivityLogCategory,
   type ActivityLogEntry,
 } from '@shared/lib/activity-log-schema';
-import { isoToLocalDate, localDateToIso } from '@shared/lib/date-format';
+import { isoToLocalDate } from '@shared/lib/date-format';
 import { cn } from '@/lib/utils';
 import { usePagination } from '@/hooks/use-pagination';
 import { listActivityLogFn } from '@backend/server/operations/activity-log.functions';
@@ -175,8 +175,6 @@ export function TechnicianHistoryPage() {
     const to = isoToLocalDate(dateTo);
     return Boolean(from && to && from > to);
   }, [dateFrom, dateTo]);
-
-  const hasDateFilter = Boolean(dateFrom || dateTo);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -333,50 +331,6 @@ export function TechnicianHistoryPage() {
               </div>
               <div className="w-full sm:w-[220px]">
                 <DatePickerField label="To date" value={dateTo} onChange={setDateTo} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Quick range</Label>
-              <div className="flex h-10 flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 rounded-[8px] px-3"
-                  disabled={!hasDateFilter}
-                  onClick={() => {
-                    setDateFrom('');
-                    setDateTo('');
-                  }}
-                >
-                  Clear dates
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="h-10 rounded-[8px] px-3"
-                  onClick={() => {
-                    const today = new Date();
-                    const weekAgo = new Date(today);
-                    weekAgo.setDate(weekAgo.getDate() - 7);
-                    setDateFrom(localDateToIso(weekAgo));
-                    setDateTo(localDateToIso(today));
-                  }}
-                >
-                  Last 7 days
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="h-10 rounded-[8px] px-3"
-                  onClick={() => {
-                    const today = new Date();
-                    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                    setDateFrom(localDateToIso(monthStart));
-                    setDateTo(localDateToIso(today));
-                  }}
-                >
-                  This month
-                </Button>
               </div>
             </div>
           </div>

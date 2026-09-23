@@ -4,7 +4,6 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Github,
   Loader2,
   MoreVertical,
   Trash2,
@@ -35,25 +34,6 @@ export function dashboardTodayLine(fallback: string) {
     day: 'numeric',
   }).format(new Date());
   return `${todayLabel} · ${fallback}`;
-}
-
-export function SystemUpdateNotice() {
-  const message = import.meta.env.VITE_SYSTEM_UPDATE?.trim();
-  if (!message) return null;
-
-  return (
-    <div className="mb-6 flex items-start gap-3 rounded-[14px] border border-border bg-card px-4 py-3.5">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
-        <Github className="h-4 w-4 text-foreground" strokeWidth={1.75} />
-      </span>
-      <div className="min-w-0 pt-0.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          Latest system update
-        </p>
-        <p className="mt-1 text-sm leading-snug text-foreground">{message}</p>
-      </div>
-    </div>
-  );
 }
 
 function BreakdownList({ rows }: { rows: { label: string; count: number }[] }) {
@@ -559,7 +539,7 @@ export function RequestTimetable({
   return (
     <DashboardPanel
       title="Request timetable"
-      description={`${monthLabel(viewMonth.year, viewMonth.month)} · Perak public holidays`}
+      description={monthLabel(viewMonth.year, viewMonth.month)}
       headerExtra={
         <MonthNav
           isCurrentMonth={isCurrentMonth}

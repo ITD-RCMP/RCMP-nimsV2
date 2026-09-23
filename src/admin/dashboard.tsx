@@ -14,7 +14,6 @@ import {
   DisposedStatCard,
   InventoryStatCard,
   RequestTimetable,
-  SystemUpdateNotice,
   useDashboardMonthState,
 } from '@/dashboard/dashboard-widgets';
 
@@ -65,8 +64,6 @@ export function AdminDashboardPage() {
           {dashboardTodayLine('Live inventory & requests')}
         </p>
       </div>
-
-      <SystemUpdateNotice />
 
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
         <InventoryStatCard

@@ -121,8 +121,6 @@ export function TechnicianRequestLogPage() {
     return Boolean(from && to && from > to);
   }, [dateFrom, dateTo]);
 
-  const hasDateFilter = Boolean(dateFrom || dateTo);
-
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -215,53 +213,9 @@ export function TechnicianRequestLogPage() {
               />
             </div>
           </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <DatePickerField label="From date" value={dateFrom} onChange={setDateFrom} />
             <DatePickerField label="To date" value={dateTo} onChange={setDateTo} />
-            <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-[8px]"
-                disabled={!hasDateFilter}
-                onClick={() => {
-                  setDateFrom('');
-                  setDateTo('');
-                }}
-              >
-                Clear dates
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="rounded-[8px]"
-                onClick={() => {
-                  const today = new Date();
-                  const weekAgo = new Date(today);
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  setDateFrom(localDateToIso(weekAgo));
-                  setDateTo(localDateToIso(today));
-                }}
-              >
-                Last 7 days
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="rounded-[8px]"
-                onClick={() => {
-                  const today = new Date();
-                  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                  setDateFrom(localDateToIso(monthStart));
-                  setDateTo(localDateToIso(today));
-                }}
-              >
-                This month
-              </Button>
-            </div>
           </div>
         </CardHeader>
       </Card>

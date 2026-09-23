@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NimsLogo } from '@/components/brand/NimsLogo';
+import { readPrivilegedSession } from '@shared/lib/auth-session';
 
 const DASH = '/admin/dashboard' as const;
 const USERS = '/admin/users' as const;
@@ -80,12 +81,17 @@ const AdminSideBar = React.forwardRef<HTMLElement, AdminSideBarProps>(function A
   { className, embedded, onSignOut, ...props },
   ref,
 ) {
+  const [fullName, setFullName] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    setFullName(readPrivilegedSession()?.fullName?.trim() || null);
+  }, []);
+
   const inner = (
     <>
       <div className="shrink-0 border-b border-black/[0.06] px-4 py-4">
         <NimsLogo size="sm" variant="light" className="mx-auto" />
-        <p className="mt-2 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Administrator
+        <p className="mt-2 text-center text-xs font-medium text-muted-foreground">
+          {fullName ?? 'Administrator'}
         </p>
       </div>
       <ScrollArea className="min-h-0 flex-1">

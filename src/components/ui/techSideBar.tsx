@@ -12,7 +12,6 @@ import {
   Package,
   Trash2,
   Tv,
-  UserCircle,
   Wrench,
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -20,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NimsLogo } from '@/components/brand/NimsLogo';
+import { readPrivilegedSession } from '@shared/lib/auth-session';
 
 const DASH = '/technician/dashboard' as const;
 const LAPTOP = '/technician/laptop' as const;
@@ -38,7 +38,6 @@ const PRE_DISPOSED = '/technician/pre-disposed' as const;
 const DISPOSED = '/technician/disposed' as const;
 const HISTORY = '/technician/history' as const;
 const REPORT = '/technician/report' as const;
-const PROFILE = '/technician/profile' as const;
 
 const HASH = {
   dashboard: '',
@@ -190,13 +189,6 @@ function TechSideBarNav() {
       >
         Report
       </NavLink>
-      <NavLink
-        to={PROFILE}
-        icon={UserCircle}
-        active={pathname === PROFILE || pathname.startsWith(`${PROFILE}/`)}
-      >
-        Profile
-      </NavLink>
     </nav>
   );
 }
@@ -205,11 +197,18 @@ const TechSideBar = React.forwardRef<HTMLElement, TechSideBarProps>(function Tec
   { className, embedded, onSignOut, ...props },
   ref,
 ) {
+  const [fullName, setFullName] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    setFullName(readPrivilegedSession()?.fullName?.trim() || null);
+  }, []);
+
   const inner = (
     <>
       <div className="shrink-0 border-b border-black/[0.06] px-4 py-4">
         <NimsLogo size="sm" variant="light" className="mx-auto" />
-        <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-center">Technical officer</p>
+        <p className="mt-2 text-center text-xs font-medium text-muted-foreground">
+          {fullName ?? 'Technical officer'}
+        </p>
       </div>
       <ScrollArea className="min-h-0 flex-1">
         <TechSideBarNav />
