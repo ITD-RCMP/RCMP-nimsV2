@@ -4,7 +4,6 @@ import type {
   CreatePmLogInput,
   CreatePmLogResult,
   PmAssetCondition,
-  PmFollowUp,
   PmLocationTree,
   PmLogAsset,
   PmLogListFilters,
@@ -539,53 +538,6 @@ export async function listPmLogBuildings(): Promise<string[]> {
     `SELECT DISTINCT building FROM pm_log ORDER BY building`,
   );
   return rows.map((r) => r.building);
-}
-
-type FollowUpRow = RowDataPacket & {
-  pm_log_asset_id: number;
-  pm_log_id: number;
-  asset_type: AssetKind;
-  asset_id: AssetId;
-  asset_category: string | null;
-  asset_label: string | null;
-  serial_num: string | null;
-  remarks: string | null;
-  pm_date: Date | string;
-  building: string;
-  level: string;
-  zone: string;
-  performed_by: number;
-  performed_email: string | null;
-};
-
-export async function listPmFollowUps(): Promise<PmFollowUp[]> {
-  const pool = getDbPool();
-  const [rows] = await pool.query<FollowUpRow[]>(
-    `SELECT a.pm_log_asset_id, a.pm_log_id, a.asset_type, a.asset_id, a.asset_category,
-            a.asset_label, a.serial_num, a.remarks,
-            l.pm_date, l.building, l.level, l.zone, l.performed_by, u.email AS performed_email
-     FROM pm_log_asset a
-     INNER JOIN pm_log l ON l.pm_log_id = a.pm_log_id
-     INNER JOIN users u ON u.id = l.performed_by
-     WHERE a.follow_up_required = 1 AND a.resolved_at IS NULL
-     ORDER BY l.pm_date DESC, a.pm_log_asset_id DESC`,
-  );
-
-  return rows.map((row) => ({
-    pmLogAssetId: row.pm_log_asset_id,
-    pmLogId: row.pm_log_id,
-    pmDate: toIsoDate(row.pm_date),
-    assetType: row.asset_type,
-    assetId: row.asset_id,
-    assetCategory: row.asset_category,
-    assetLabel: row.asset_label?.trim() || `Asset #${row.asset_id}`,
-    serialNum: row.serial_num,
-    building: row.building,
-    level: row.level,
-    zone: row.zone,
-    remarks: row.remarks,
-    reportedBy: row.performed_email?.trim() || `User #${row.performed_by}`,
-  }));
 }
 
 export async function getPmStats(): Promise<PmStats> {

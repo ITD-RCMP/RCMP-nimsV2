@@ -10,8 +10,6 @@
     "build:dev": "NODE_OPTIONS=--max-old-space-size=8192 vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "mailpit": "docker compose -f docker-compose.mailpit.yml up",
-    "mailpit:down": "docker compose -f docker-compose.mailpit.yml down",
     "overdue-emails": "npx tsx backend/scripts/run-overdue-return-emails.ts",
     "ai:reindex": "npx tsx backend/scripts/ai-reindex-embeddings.ts",
     "ai:golden": "npx tsx backend/scripts/ai-golden-questions.ts"

@@ -40,13 +40,6 @@ export const listPmLogBuildingsFn = createServerFn({ method: 'GET' })
     return listPmLogBuildings();
   });
 
-export const listPmFollowUpsFn = createServerFn({ method: 'GET' })
-  .middleware([staffMiddleware])
-  .handler(async () => {
-    const { listPmFollowUps } = await import('@backend/server/operations/pm-repo.server');
-    return listPmFollowUps();
-  });
-
 export const updatePmLogAssetsFn = createServerFn({ method: 'POST' })
   .middleware([staffMiddleware])
   .inputValidator((data: UpdatePmLogAssetsInput) => data)

@@ -80,11 +80,3 @@ export const getStaffProfileFn = createServerFn({ method: 'POST' })
     const { getStaffProfile } = await import('@backend/server/auth/auth-repo.server');
     return getStaffProfile(context.staffId);
   });
-
-export const updateStaffProfileFn = createServerFn({ method: 'POST' })
-  .middleware([staffMiddleware])
-  .inputValidator((data: { fullName: string; email: string; phone: string | null }) => data)
-  .handler(async ({ data, context }) => {
-    const { updateStaffProfile } = await import('@backend/server/auth/auth-repo.server');
-    return updateStaffProfile({ ...data, staffId: context.staffId });
-  });

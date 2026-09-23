@@ -12,7 +12,6 @@ import type {
   RemoveAssetsFromPredisposalInput,
   RemovePredisposedPicturesInput,
   SubmitDisposalBatchInput,
-  UploadDisposalImageInput,
   UploadPredisposedPictureInput,
 } from '@shared/lib/disposal-schema';
 import type { NextAssetIdRequest } from '@backend/server/assets/asset-id.server';
@@ -55,32 +54,6 @@ export const createNetworkFn = createServerFn({ method: 'POST' })
   .handler(async ({ data: input }) => {
     const { createNetwork } = await import('@backend/server/assets/assets-repo.server');
     return createNetwork(input);
-  });
-
-export const bulkCreateLaptopsFn = createServerFn({ method: 'POST' })
-  .middleware([staffMiddleware])
-  .inputValidator((rows: CreateLaptopInput[]) => rows)
-  .handler(async ({ data: rows }) => {
-    const { getSessionUser } = await import('@backend/server/auth/session.server');
-    const session = await getSessionUser();
-    const { bulkCreateLaptops } = await import('@backend/server/assets/assets-repo.server');
-    return bulkCreateLaptops(rows, session?.fullName?.trim() || session?.email || null);
-  });
-
-export const bulkCreateAvFn = createServerFn({ method: 'POST' })
-  .middleware([staffMiddleware])
-  .inputValidator((rows: CreateAvInput[]) => rows)
-  .handler(async ({ data: rows }) => {
-    const { bulkCreateAv } = await import('@backend/server/assets/assets-repo.server');
-    return bulkCreateAv(rows);
-  });
-
-export const bulkCreateNetworkFn = createServerFn({ method: 'POST' })
-  .middleware([staffMiddleware])
-  .inputValidator((rows: CreateNetworkInput[]) => rows)
-  .handler(async ({ data: rows }) => {
-    const { bulkCreateNetwork } = await import('@backend/server/assets/assets-repo.server');
-    return bulkCreateNetwork(rows);
   });
 
 export const getNextAssetIdFn = createServerFn({ method: 'GET' })
@@ -247,21 +220,6 @@ export const getDisposalReportFn = createServerFn({ method: 'GET' })
   .handler(async ({ data: noRujukanPelupusan }) => {
     const { getDisposalReport } = await import('@backend/server/assets/disposal-repo.server');
     return getDisposalReport(noRujukanPelupusan);
-  });
-
-export const createDisposalUploadBatchFn = createServerFn({ method: 'POST' })
-  .middleware([disposalUnitMiddleware])
-  .handler(async () => {
-    const { createDisposalUploadBatch } = await import('@backend/server/assets/disposal-image.server');
-    return createDisposalUploadBatch();
-  });
-
-export const uploadDisposalImageFn = createServerFn({ method: 'POST' })
-  .middleware([disposalUnitMiddleware])
-  .inputValidator((input: UploadDisposalImageInput) => input)
-  .handler(async ({ data: input }) => {
-    const { saveDisposalImage } = await import('@backend/server/assets/disposal-image.server');
-    return saveDisposalImage(input);
   });
 
 export const uploadPredisposedPictureFn = createServerFn({ method: 'POST' })
