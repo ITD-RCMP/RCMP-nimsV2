@@ -2,15 +2,12 @@ import { createServerFn } from '@tanstack/react-start';
 import type {
   AssignAssetToRequestInput,
   ChangeBookedAssignmentInput,
-  CheckoutRequestAssignmentInput,
   CheckoutUserRequestInput,
   CancelBookedNotTakenInput,
   CancelBookedUnavailableInput,
   MarkRequestSlotNotTakenInput,
   MarkRequestSlotUnavailableInput,
-  ReturnRequestAssignmentInput,
   ReturnUserRequestInput,
-  MarkAssetForRequestInput,
   MarkAssetsForRequestInput,
   RemoveAssetFromRequestPoolInput,
   RejectUserRequestInput,
@@ -39,13 +36,6 @@ export const listAvailablePoolAssetsFn = createServerFn({ method: 'GET' })
     return listAvailablePoolAssets();
   });
 
-export const listAssignedRequestPoolAssetsFn = createServerFn({ method: 'GET' })
-  .middleware([staffMiddleware])
-  .handler(async () => {
-    const { listAssignedRequestPoolAssets } = await import('@backend/server/requests/request-repo.server');
-    return listAssignedRequestPoolAssets();
-  });
-
 export const listPendingRequestsFn = createServerFn({ method: 'GET' })
   .middleware([staffMiddleware])
   .handler(async () => {
@@ -58,14 +48,6 @@ export const listRequestLogFn = createServerFn({ method: 'GET' })
   .handler(async () => {
     const { listRequestLog } = await import('@backend/server/requests/request-repo.server');
     return listRequestLog();
-  });
-
-export const markAssetForRequestFn = createServerFn({ method: 'POST' })
-  .middleware([staffMiddleware])
-  .inputValidator((input: MarkAssetForRequestInput) => input)
-  .handler(async ({ data: input }) => {
-    const { markAssetForRequest } = await import('@backend/server/requests/request-repo.server');
-    await markAssetForRequest(input);
   });
 
 export const markAssetsForRequestFn = createServerFn({ method: 'POST' })
@@ -125,14 +107,6 @@ export const changeBookedAssignmentFn = createServerFn({ method: 'POST' })
     await changeBookedAssignment({ ...input, changedBy: context.staffId });
   });
 
-export const checkoutRequestAssignmentFn = createServerFn({ method: 'POST' })
-  .middleware([staffMiddleware])
-  .inputValidator((input: CheckoutRequestAssignmentInput) => input)
-  .handler(async ({ data: input, context }) => {
-    const { checkoutRequestAssignment } = await import('@backend/server/requests/request-repo.server');
-    await checkoutRequestAssignment({ ...input, checkedOutBy: context.staffId });
-  });
-
 export const checkoutUserRequestFn = createServerFn({ method: 'POST' })
   .middleware([staffMiddleware])
   .inputValidator((input: CheckoutUserRequestInput) => input)
@@ -171,14 +145,6 @@ export const cancelBookedAssignmentUnavailableFn = createServerFn({ method: 'POS
   .handler(async ({ data: input, context }) => {
     const { cancelBookedAssignmentUnavailable } = await import('@backend/server/requests/request-repo.server');
     await cancelBookedAssignmentUnavailable({ ...input, cancelledBy: context.staffId });
-  });
-
-export const returnRequestAssignmentFn = createServerFn({ method: 'POST' })
-  .middleware([staffMiddleware])
-  .inputValidator((input: ReturnRequestAssignmentInput) => input)
-  .handler(async ({ data: input, context }) => {
-    const { returnRequestAssignment } = await import('@backend/server/requests/request-repo.server');
-    await returnRequestAssignment({ ...input, returnedBy: context.staffId });
   });
 
 export const returnUserRequestFn = createServerFn({ method: 'POST' })
