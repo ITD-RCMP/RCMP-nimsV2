@@ -3,9 +3,10 @@ import type { AuthUserRow } from '@backend/server/auth/auth-repo.server';
 import {
   bumpWebSessionVersion,
   ensureWebSessionVersion,
-  readWebSessionVersion,
+  readWebSessionBinding,
 } from '@backend/server/auth/web-session-version.server';
 import { loadServerEnv } from '@backend/server/core/env.server';
+import { isPublicPlaceholderSecret } from '@backend/server/core/secret-policy';
 import {
   SESSION_ACTIVITY_THROTTLE_MS,
   SESSION_REVOKED_CODE,
@@ -62,14 +63,18 @@ export function readSessionPolicy(): SessionTimeoutPolicy {
   };
 }
 
+export function isSecureAuthCookie(): boolean {
+  return process.env.NODE_ENV !== 'development';
+}
+
 function sessionSecret(): string {
   loadServerEnv();
   const secret = process.env.SESSION_SECRET?.trim();
   if (!secret) {
     throw new Error('Session storage is not configured. Set SESSION_SECRET on the server.');
   }
-  if (secret.length < 32) {
-    throw new Error('SESSION_SECRET must be at least 32 characters long.');
+  if (secret.length < 32 || isPublicPlaceholderSecret(secret)) {
+    throw new Error('SESSION_SECRET must be a unique random string at least 32 characters long.');
   }
   return secret;
 }
@@ -82,7 +87,7 @@ function sessionOptions() {
     maxAge: Math.max(1, Math.ceil(policy.absoluteTimeoutMs / 1000)),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecureAuthCookie(),
       sameSite: 'lax' as const,
       path: '/',
     },
@@ -179,8 +184,12 @@ export async function evaluateWebSession(mode: 'read' | 'touch' | 'force'): Prom
     return { kind: 'revoked' };
   }
 
-  const currentVersion = await readWebSessionVersion(userId);
-  if (currentVersion == null || currentVersion !== data.sessionVersion) {
+  const binding = await readWebSessionBinding(userId);
+  if (
+    binding == null ||
+    binding.sessionVersion !== data.sessionVersion ||
+    binding.roleId !== data.roleId
+  ) {
     await clearSessionCookie();
     return { kind: 'revoked' };
   }
@@ -212,7 +221,7 @@ export async function evaluateWebSession(mode: 'read' | 'touch' | 'force'): Prom
     user: {
       staffId: data.staffId,
       roleId: data.roleId,
-      roleName: data.roleName ?? '',
+      roleName: binding.roleName || data.roleName || '',
       fullName: data.fullName ?? '',
       email: data.email ?? '',
       phone: data.phone ?? null,

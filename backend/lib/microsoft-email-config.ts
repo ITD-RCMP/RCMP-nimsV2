@@ -16,15 +16,19 @@ const DEFAULT_PORT = 587;
 const MAILPIT_DEFAULT_HOST = '127.0.0.1';
 const MAILPIT_DEFAULT_PORT = 1025;
 
-/// Returns true if the SMTP settings indicate that Mailpit is being used.
+export function isLoopbackSmtpHost(host: string | undefined): boolean {
+  const value = host?.trim().toLowerCase() ?? '';
+  return value === '127.0.0.1' || value === 'localhost' || value === '::1';
+}
+
 export function isMailpitMode(): boolean {
-  if (process.env.SMTP_MAILPIT === 'true' || process.env.SMTP_MAILPIT === '1') return true;
-  const host = process.env.SMTP_HOST?.trim().toLowerCase();
+  const flagged = process.env.SMTP_MAILPIT === 'true' || process.env.SMTP_MAILPIT === '1';
+  const host = process.env.SMTP_HOST?.trim();
   const port = Number(process.env.SMTP_PORT?.trim());
-  return (
-    (host === '127.0.0.1' || host === 'localhost') &&
-    (port === 1025 || Number.isNaN(port))
-  );
+  const loopback = isLoopbackSmtpHost(host) || (!host && flagged);
+  if (!loopback) return false;
+  if (flagged) return true;
+  return port === 1025 || (Boolean(host) && Number.isNaN(port));
 }
 
 export function isEmailConfigured(): boolean {

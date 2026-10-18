@@ -2,7 +2,11 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type { SendNotificationEmailInput, SendNotificationEmailResult } from '@shared/lib/email-notification';
 import { EMAIL_NOT_CONFIGURED_MESSAGE } from '@shared/lib/email-notification';
-import { getMicrosoftEmailConfig, isEmailConfigured } from '@backend/lib/microsoft-email-config';
+import {
+  getMicrosoftEmailConfig,
+  isEmailConfigured,
+  isLoopbackSmtpHost,
+} from '@backend/lib/microsoft-email-config';
 
 const EMAIL_RECIPIENT_MISSING =
   'No valid recipient email address was found. Check that the recipient has an email on file.';
@@ -31,16 +35,23 @@ function getTransporter(): Transporter {
       secure: config.secure,
       ...(config.auth ? { auth: config.auth } : {}),
       requireTLS: Boolean(config.auth) && !config.secure && config.port === 587,
-      tls: config.auth ? undefined : { rejectUnauthorized: false },
+      tls:
+        !config.auth && isLoopbackSmtpHost(config.host)
+          ? { rejectUnauthorized: false }
+          : undefined,
     });
   }
 
   return transporter;
 }
 
+const MAX_EMAIL_LENGTH = 320;
+
 function normalizeRecipients(to: string | string[], required = true): string[] {
   const list = Array.isArray(to) ? to : [to];
-  const out = list.map((e) => e.trim().toLowerCase()).filter((e) => e.includes('@'));
+  const out = list
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e.length <= MAX_EMAIL_LENGTH && !/[\r\n,]/.test(e) && /^[^\s@]+@[^\s@]+$/.test(e));
   if (required && out.length === 0) throw new Error(EMAIL_RECIPIENT_MISSING);
   return out;
 }

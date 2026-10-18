@@ -38,6 +38,36 @@ export async function readWebSessionVersion(userId: number): Promise<number | nu
   return asVersion(rows[0]?.session_version);
 }
 
+export type WebSessionBinding = {
+  sessionVersion: number;
+  roleId: number;
+  roleName: string;
+};
+
+export async function readWebSessionBinding(userId: number): Promise<WebSessionBinding | null> {
+  await ensureWebSessionTable();
+  const pool = getDbPool();
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT w.session_version, u.role_id, r.name AS role_name
+     FROM web_session w
+     INNER JOIN users u ON u.id = w.user_id
+     INNER JOIN role r ON r.id = u.role_id
+     WHERE w.user_id = ?
+     LIMIT 1`,
+    [userId],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  const sessionVersion = asVersion(row.session_version);
+  const roleId = Number(row.role_id);
+  if (sessionVersion == null || !Number.isInteger(roleId) || roleId < 1) return null;
+  return {
+    sessionVersion,
+    roleId,
+    roleName: typeof row.role_name === 'string' ? row.role_name : '',
+  };
+}
+
 export async function ensureWebSessionVersion(userId: number): Promise<number> {
   await ensureWebSessionTable();
   const pool = getDbPool();

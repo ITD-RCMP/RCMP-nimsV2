@@ -1,12 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { bearerMatchesSecret, isPublicPlaceholderSecret } from '@backend/server/core/secret-policy';
 
 export const Route = createFileRoute('/api/cron/overdue-return-emails')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = process.env.CRON_SECRET?.trim();
-        const auth = request.headers.get('authorization')?.trim();
-        if (!secret || auth !== `Bearer ${secret}`) {
+        const secret = process.env.CRON_SECRET?.trim() ?? '';
+        const authorized =
+          secret.length > 0 &&
+          !isPublicPlaceholderSecret(secret) &&
+          bearerMatchesSecret(request.headers.get('authorization'), secret);
+        if (!authorized) {
           return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

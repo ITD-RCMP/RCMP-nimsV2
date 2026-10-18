@@ -34,7 +34,7 @@ export const assertActiveWebSessionFn = createServerFn({ method: 'GET' }).handle
 });
 
 function assertDevLoginAllowed(): void {
-  if (process.env.NODE_ENV === 'production' || process.env.ENABLE_DEV_LOGIN !== 'true') {
+  if (process.env.NODE_ENV !== 'development' || process.env.ENABLE_DEV_LOGIN !== 'true') {
     throw new Error('Development sign-in is not available.');
   }
 }

@@ -19,6 +19,7 @@ import type {
 import { REPORT_PDF_COLUMNS } from '@shared/lib/technician-export-schema';
 import { getAssetTrailEvents } from '@backend/server/assets/assets-repo.server';
 import { attachDisplayNames } from '@backend/server/core/azure-directory.server';
+import { escapeCsvCell } from '@backend/server/admin/csv-cell';
 import { getDbPool } from '@backend/server/core/db';
 
 export type TechnicianExportResult = {
@@ -39,12 +40,6 @@ const HISTORY_STATUS_IDS = new Set<number>([
   STATUS_ID.PRE_DISPOSED,
   STATUS_ID.DISPOSED,
 ]);
-
-function escapeCsvCell(val: unknown): string {
-  const s = val == null ? '' : String(val);
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
 
 function toCsv(headers: string[], rows: unknown[][]): string {
   const lines = [headers.map(escapeCsvCell).join(',')];

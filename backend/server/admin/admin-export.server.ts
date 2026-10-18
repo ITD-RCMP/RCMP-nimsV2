@@ -1,6 +1,7 @@
 import type { RowDataPacket } from 'mysql2';
 import { assetIdNewestYearFirstSql } from '@/hooks/assetid-generator';
 import { attachDisplayNames, getDirectoryUsersByOids } from '@backend/server/core/azure-directory.server';
+import { escapeCsvCell } from '@backend/server/admin/csv-cell';
 import { getDbPool } from '@backend/server/core/db';
 
 export type AdminExportKind =
@@ -18,12 +19,6 @@ export type AdminExportResult = {
   contentType: string;
   body: string;
 };
-
-function escapeCsvCell(val: unknown): string {
-  const s = val == null ? '' : String(val);
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
 
 function toCsv(headers: string[], rows: unknown[][]): string {
   const lines = [headers.map(escapeCsvCell).join(',')];

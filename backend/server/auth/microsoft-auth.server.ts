@@ -6,6 +6,7 @@ import {
   type MicrosoftAuthConfig,
 } from '@backend/lib/microsoft-auth-config';
 import { loginMicrosoftUser, type MicrosoftLoginResult } from '@backend/server/auth/auth-repo.server';
+import { isSecureAuthCookie } from '@backend/server/auth/session.server';
 
 const OAUTH_NONCE_COOKIE = 'nims_oauth_nonce';
 
@@ -148,7 +149,7 @@ function resolveEmail(profile: GraphMe, allowedDomains: string[]): string {
 function setOAuthNonceCookie(nonce: string): void {
   setCookie(OAUTH_NONCE_COOKIE, nonce, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isSecureAuthCookie(),
     sameSite: 'lax',
     path: '/',
     maxAge: Math.ceil(OAUTH_STATE_TTL_MS / 1000),

@@ -25,8 +25,7 @@ export const getLandingSystemStatusFn = createServerFn({ method: 'GET' }).handle
   try {
     const { getLandingSystemStatus } = await import('@backend/server/operations/landing-status-repo.server');
     return await getLandingSystemStatus();
-  } catch (e) {
-    const message = e instanceof Error ? e.message : 'System status could not be loaded. Try refreshing the page.';
-    return fallbackStatus(message);
+  } catch {
+    return fallbackStatus('System status could not be loaded. Try refreshing the page.');
   }
 });
