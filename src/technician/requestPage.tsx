@@ -36,7 +36,10 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -140,7 +143,6 @@ function poolAssetSearchText(a: {
 function PoolAssetSelectDetails({
   assetId,
   assetIdOld,
-  category,
   brand,
   model,
 }: {
@@ -150,17 +152,70 @@ function PoolAssetSelectDetails({
   brand: string | null;
   model: string | null;
 }) {
-  const meta = [category, brand, model].filter(Boolean).join(' · ');
   return (
-    <div className="min-w-0 text-left">
-      <p className="font-mono text-xs leading-tight">{assetId ?? '—'}</p>
-      {assetIdOld ? (
-        <p className="text-[10px] leading-tight text-muted-foreground">{assetIdOld}</p>
-      ) : null}
-      {meta ? (
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{meta}</p>
+    <div className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left">
+      <div className="shrink-0">
+        <p className="font-mono text-xs font-semibold leading-tight">{assetId ?? '—'}</p>
+        {assetIdOld ? (
+          <p className="text-[10px] leading-tight text-muted-foreground">{assetIdOld}</p>
+        ) : null}
+      </div>
+      {(model ?? brand) ? (
+        <div className="min-w-0 text-right">
+          {model ? (
+            <p className="truncate text-xs leading-tight">{model}</p>
+          ) : null}
+          {brand ? (
+            <p className="truncate text-[10px] leading-tight text-muted-foreground">{brand}</p>
+          ) : null}
+        </div>
       ) : null}
     </div>
+  );
+}
+
+function groupPoolAssetsByCategory(assets: RequestPoolAsset[]): { label: string; items: RequestPoolAsset[] }[] {
+  const map = new Map<string, RequestPoolAsset[]>();
+  for (const a of assets) {
+    const key = a.category?.trim().toUpperCase() ?? 'UNCATEGORIZED';
+    const group = map.get(key);
+    if (group) group.push(a);
+    else map.set(key, [a]);
+  }
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([label, items]) => ({ label, items }));
+}
+
+function GroupedPoolAssetOptions({ options }: { options: RequestPoolAsset[] }) {
+  const groups = groupPoolAssetsByCategory(options);
+  return (
+    <>
+      {groups.map((g, gi) => (
+        <SelectGroup key={g.label}>
+          <SelectLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+            {g.label} ({g.items.length})
+          </SelectLabel>
+          {g.items.map((p) => (
+            <SelectItem
+              key={`${p.kind}-${p.assetId}`}
+              value={`${p.kind}:${p.assetId}`}
+              textValue={poolAssetSearchText(p)}
+              className="py-2"
+            >
+              <PoolAssetSelectDetails
+                assetId={p.assetId}
+                assetIdOld={p.assetIdOld}
+                category={p.category}
+                brand={p.brand}
+                model={p.model}
+              />
+            </SelectItem>
+          ))}
+          {gi < groups.length - 1 ? <SelectSeparator /> : null}
+        </SelectGroup>
+      ))}
+    </>
   );
 }
 
@@ -805,17 +860,7 @@ export function TechnicianRequestPage() {
   const optionsForKind = (kind: RequestAssignableKind) =>
     pool.filter((a) => a.kind === kind);
 
-  const optionsForSlot = (kind: RequestAssignableKind, requestedType?: string | null) => {
-    const ofKind = optionsForKind(kind);
-    if (!requestedType || kind === 'laptop') return ofKind;
-    const matching: RequestPoolAsset[] = [];
-    const other: RequestPoolAsset[] = [];
-    for (const asset of ofKind) {
-      if (assetCategoryMatchesRequestType(asset.category, requestedType)) matching.push(asset);
-      else other.push(asset);
-    }
-    return [...matching, ...other];
-  };
+  const optionsForSlot = (kind: RequestAssignableKind) => optionsForKind(kind);
 
   const openReturnForm = (req: PendingRequest) => {
     setReturnRequest(req);
@@ -981,7 +1026,7 @@ export function TechnicianRequestPage() {
                       (a?.requestItemId != null
                         ? (req.items.find((item) => item.requestItemId === a.requestItemId) ?? null)
                         : null);
-                    const options = optionsForSlot(group.kind, requestedItem?.assetType);
+                    const options = optionsForSlot(group.kind);
                     const slotId = requestedItem?.requestItemId ?? group.kind;
                     const bookKey = `book-${req.requestId}-${slotId}`;
                     const unavailKey = `unavail-${req.requestId}-${slotId}`;
@@ -1045,40 +1090,35 @@ export function TechnicianRequestPage() {
                                   <SelectTrigger className="h-auto min-h-8 max-w-md rounded-[6px] py-1.5 text-xs [&>span]:line-clamp-none">
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent className="min-w-[min(100vw-2rem,22rem)]">
-                                    <SelectItem
-                                      value={`${a.kind}:${a.assetId}`}
-                                      textValue={poolAssetSearchText(a)}
-                                      className="items-start py-2"
-                                    >
-                                      <PoolAssetSelectDetails
-                                        assetId={a.assetId}
-                                        assetIdOld={a.assetIdOld}
-                                        category={null}
-                                        brand={a.brand}
-                                        model={a.model}
-                                      />
-                                    </SelectItem>
-                                    {options
-                                      .filter(
-                                        (p) => `${p.kind}:${p.assetId}` !== `${a.kind}:${a.assetId}`,
-                                      )
-                                      .map((p) => (
-                                        <SelectItem
-                                          key={`${p.kind}-${p.assetId}`}
-                                          value={`${p.kind}:${p.assetId}`}
-                                          textValue={poolAssetSearchText(p)}
-                                          className="items-start py-2"
-                                        >
-                                          <PoolAssetSelectDetails
-                                            assetId={p.assetId}
-                                            assetIdOld={p.assetIdOld}
-                                            category={p.category}
-                                            brand={p.brand}
-                                            model={p.model}
-                                          />
-                                        </SelectItem>
-                                      ))}
+                                  <SelectContent className="min-w-[min(100vw-2rem,24rem)]">
+                                    <SelectGroup>
+                                      <SelectLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                                        Current
+                                      </SelectLabel>
+                                      <SelectItem
+                                        value={`${a.kind}:${a.assetId}`}
+                                        textValue={poolAssetSearchText(a)}
+                                        className="py-2"
+                                      >
+                                        <PoolAssetSelectDetails
+                                          assetId={a.assetId}
+                                          assetIdOld={a.assetIdOld}
+                                          category={null}
+                                          brand={a.brand}
+                                          model={a.model}
+                                        />
+                                      </SelectItem>
+                                    </SelectGroup>
+                                    {options.filter((p) => `${p.kind}:${p.assetId}` !== `${a.kind}:${a.assetId}`).length > 0 ? (
+                                      <>
+                                        <SelectSeparator />
+                                        <GroupedPoolAssetOptions
+                                          options={options.filter(
+                                            (p) => `${p.kind}:${p.assetId}` !== `${a.kind}:${a.assetId}`,
+                                          )}
+                                        />
+                                      </>
+                                    ) : null}
                                   </SelectContent>
                                 </Select>
                               ) : (
@@ -1182,36 +1222,17 @@ export function TechnicianRequestPage() {
                                     placeholder={
                                       actionKey === bookKey
                                         ? 'Booking…'
-                                        : requestedItem
-                                          ? `Select ${requestedItem.assetType}…`
-                                          : 'Select asset…'
+                                        : `Select ${group.label}…`
                                     }
                                   />
                                 </SelectTrigger>
-                                <SelectContent className="min-w-[min(100vw-2rem,22rem)]">
+                                <SelectContent className="min-w-[min(100vw-2rem,24rem)]">
                                   {options.length === 0 ? (
                                     <SelectItem value="_none" disabled>
-                                      {requestedItem
-                                        ? `No ${group.kind === 'laptop' ? 'laptop' : 'AV'} assets in pool`
-                                        : 'No assets in pool'}
+                                      {`No ${group.label} assets in pool`}
                                     </SelectItem>
                                   ) : (
-                                    options.map((poolAsset) => (
-                                      <SelectItem
-                                        key={`${poolAsset.kind}-${poolAsset.assetId}`}
-                                        value={`${poolAsset.kind}:${poolAsset.assetId}`}
-                                        textValue={poolAssetSearchText(poolAsset)}
-                                        className="items-start py-2"
-                                      >
-                                        <PoolAssetSelectDetails
-                                          assetId={poolAsset.assetId}
-                                          assetIdOld={poolAsset.assetIdOld}
-                                          category={poolAsset.category}
-                                          brand={poolAsset.brand}
-                                          model={poolAsset.model}
-                                        />
-                                      </SelectItem>
-                                    ))
+                                    <GroupedPoolAssetOptions options={options} />
                                   )}
                                 </SelectContent>
                               </Select>

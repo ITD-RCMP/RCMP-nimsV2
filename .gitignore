@@ -40,3 +40,4 @@ docs
 .env
 .env.*
 !.env.example
+.vibe-wise

@@ -26,11 +26,21 @@ export function getStatusBadgeClassName(statusId: number): string {
   }
 }
 
-export function AssetStatusBadge({ statusId }: { statusId: number }) {
+export function AssetStatusBadge({
+  statusId,
+  className,
+}: {
+  statusId: number;
+  className?: string;
+}) {
   return (
     <Badge
       variant="outline"
-      className={cn('rounded-[8px] text-[10px] font-semibold capitalize', getStatusBadgeClassName(statusId))}
+      className={cn(
+        'rounded-[8px] text-[10px] font-semibold capitalize',
+        getStatusBadgeClassName(statusId),
+        className,
+      )}
     >
       {formatStatusLabel(statusId)}
     </Badge>

@@ -163,9 +163,13 @@ async function queryLaptopPool(): Promise<RequestPoolAsset[]> {
     `SELECT l.asset_id, l.model, l.brand, l.category, l.serial_num, l.status_id,
             ra.request_id, u.oid AS requester_oid, ra.assignment_id
      FROM laptop l
-     LEFT JOIN request_assignment ra
-       ON ${sqlAssetIdEq('ra.asset_id', 'l.asset_id')} AND ra.returned_at IS NULL
-     LEFT JOIN request r ON r.request_id = ra.request_id AND r.rejected_at IS NULL
+     LEFT JOIN (
+       SELECT ra_i.assignment_id, ra_i.asset_id, ra_i.request_id
+       FROM request_assignment ra_i
+       JOIN request r_i ON r_i.request_id = ra_i.request_id AND r_i.rejected_at IS NULL
+       WHERE ra_i.returned_at IS NULL
+     ) ra ON ${sqlAssetIdEq('ra.asset_id', 'l.asset_id')}
+     LEFT JOIN request r ON r.request_id = ra.request_id
      LEFT JOIN users u ON u.id = r.requested_by
      WHERE l.status_id IN (?, ?, ?)
      ORDER BY ${assetIdNewestYearFirstSql('l.asset_id')}`,
@@ -193,9 +197,13 @@ async function queryAvPool(): Promise<RequestPoolAsset[]> {
     `SELECT a.asset_id, a.asset_id_old, a.model, a.brand, a.category, a.serial_num, a.status_id,
             ra.request_id, u.oid AS requester_oid, ra.assignment_id
      FROM av a
-     LEFT JOIN request_assignment ra
-       ON ${sqlAssetIdEq('ra.asset_id', 'a.asset_id')} AND ra.returned_at IS NULL
-     LEFT JOIN request r ON r.request_id = ra.request_id AND r.rejected_at IS NULL
+     LEFT JOIN (
+       SELECT ra_i.assignment_id, ra_i.asset_id, ra_i.request_id
+       FROM request_assignment ra_i
+       JOIN request r_i ON r_i.request_id = ra_i.request_id AND r_i.rejected_at IS NULL
+       WHERE ra_i.returned_at IS NULL
+     ) ra ON ${sqlAssetIdEq('ra.asset_id', 'a.asset_id')}
+     LEFT JOIN request r ON r.request_id = ra.request_id
      LEFT JOIN users u ON u.id = r.requested_by
      WHERE a.status_id IN (?, ?, ?)
      ORDER BY ${assetIdNewestYearFirstSql('a.asset_id')}`,

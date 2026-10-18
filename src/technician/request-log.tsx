@@ -85,11 +85,11 @@ function formatDateTime(at: string): string {
 }
 
 function ManagedStamp({ at, by }: { at: string | null; by: string | null }) {
-  if (!at) return <span>—</span>;
+  if (!at) return <span className="text-muted-foreground">—</span>;
   return (
     <div>
-      <p>{formatDateTime(at)}</p>
-      {by ? <p className="mt-0.5">by {by}</p> : null}
+      <p className="font-medium text-foreground">{by ?? 'Unknown'}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{formatDateTime(at)}</p>
     </div>
   );
 }
@@ -333,10 +333,9 @@ function RequestLogDetail({ entry }: { entry: RequestLogEntry }) {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Asset</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Booked</TableHead>
-                  <TableHead>Checkout</TableHead>
-                  <TableHead>Returned</TableHead>
+                  <TableHead className="w-[160px]">Booked</TableHead>
+                  <TableHead className="w-[160px]">Checkout</TableHead>
+                  <TableHead className="w-[160px]">Returned</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -364,19 +363,19 @@ function RequestLogDetail({ entry }: { entry: RequestLogEntry }) {
                           {assetLabel(a)}
                         </span>
                       )}
+                      <p className="mt-0.5 text-xs text-muted-foreground">{a.assetType ?? '—'}</p>
                     </TableCell>
-                    <TableCell className="text-sm">{a.assetType ?? '—'}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell>
                       {a.slotMark ? (
-                        '—'
+                        <span className="text-muted-foreground">—</span>
                       ) : (
                         <ManagedStamp at={a.assignedAt} by={a.bookedBy} />
                       )}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell>
                       <ManagedStamp at={a.checkoutAt} by={a.bookedBy} />
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell>
                       <ManagedStamp at={a.returnedAt} by={a.returnedBy} />
                     </TableCell>
                   </TableRow>

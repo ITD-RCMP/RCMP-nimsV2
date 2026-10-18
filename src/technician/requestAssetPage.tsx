@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Laptop, PackagePlus, Search, Tv } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Laptop, PackagePlus, Plus, Search, Tv, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -12,24 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import type { ActiveForRequestAsset, RequestAssignableKind } from '@shared/lib/request-schema';
 import {
   avCategoryMatchesRequestCatalog,
   avRequestCategoryChoices,
 } from '@shared/lib/request-asset-types';
 import { isKnownLaptopCategory, LAPTOP_CATEGORY_OPTIONS } from '@/hooks/assetid-generator';
-import { usePagination } from '@/hooks/use-pagination';
 import { AssetStatusBadge } from '@/technician/asset-status-badge';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
 import { TechnicianShell } from '@/technician/technician-shell';
 import { RequestToolbarActions } from '@/technician/request-toolbar-actions';
 import {
@@ -51,23 +39,31 @@ function assetKey(kind: RequestAssignableKind, assetId: number) {
   return `${kind}:${assetId}`;
 }
 
-type KindFilter = 'all' | RequestAssignableKind;
+function assetMatchesQuery(a: ActiveForRequestAsset, q: string) {
+  return [String(a.assetId), a.assetIdOld, a.model, a.brand, a.category, a.serialNum, a.kind]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+    .includes(q);
+}
 
 export function TechnicianRequestAssetPage() {
   const [assets, setAssets] = useState<ActiveForRequestAsset[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [kindFilter, setKindFilter] = useState<KindFilter>('all');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [staged, setStaged] = useState<ActiveForRequestAsset[]>([]);
   const [categoryDraft, setCategoryDraft] = useState<Record<string, string>>({});
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [inputError, setInputError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const rows = await listActiveForRequestPoolFn();
       setAssets(rows);
-      setSelected(new Set());
+      setStaged([]);
       setCategoryDraft({});
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to load assets');
@@ -80,82 +76,78 @@ export function TechnicianRequestAssetPage() {
     void load();
   }, [load]);
 
-  const filtered = useMemo(() => {
-    let list = assets;
-    if (kindFilter !== 'all') {
-      list = list.filter((a) => a.kind === kindFilter);
-    }
-    const q = search.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((a) =>
-      [
-        String(a.assetId),
-        a.assetIdOld,
-        a.model,
-        a.brand,
-        a.category,
-        a.serialNum,
-        a.kind,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-        .includes(q),
-    );
-  }, [assets, search, kindFilter]);
-
-  const pagination = usePagination(filtered, {
-    resetKey: `${search}|${kindFilter}`,
-  });
-
-  const filteredKeys = useMemo(
-    () => filtered.map((a) => assetKey(a.kind, a.assetId)),
-    [filtered],
+  const stagedKeys = useMemo(
+    () => new Set(staged.map((a) => assetKey(a.kind, a.assetId))),
+    [staged],
   );
 
-  const allFilteredSelected =
-    filtered.length > 0 && filteredKeys.every((k) => selected.has(k));
-  const someFilteredSelected = filteredKeys.some((k) => selected.has(k));
+  const suggestions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return assets
+      .filter((a) => !stagedKeys.has(assetKey(a.kind, a.assetId)) && assetMatchesQuery(a, q))
+      .slice(0, 8);
+  }, [assets, stagedKeys, query]);
 
-  const toggleOne = (key: string, checked: boolean) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(key);
-      else next.delete(key);
-      return next;
-    });
-  };
-
-  const toggleAllFiltered = (checked: boolean) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (checked) filteredKeys.forEach((k) => next.add(k));
-      else filteredKeys.forEach((k) => next.delete(k));
-      return next;
-    });
-  };
-
-  const selectedAssets = useMemo(() => {
-    return assets.filter((a) => selected.has(assetKey(a.kind, a.assetId)));
-  }, [assets, selected]);
-
-  const handleAdd = async () => {
-    if (selectedAssets.length === 0) {
-      toast.error('Select at least one asset');
+  const addAsset = (asset: ActiveForRequestAsset) => {
+    const key = assetKey(asset.kind, asset.assetId);
+    if (stagedKeys.has(key)) {
+      setQuery('');
+      setOpen(false);
       return;
     }
-    const missingCategory = selectedAssets.filter((asset) => {
-      const key = assetKey(asset.kind, asset.assetId);
-      const nextCategory = categoryDraft[key] || asset.category;
-      return !categoryFitsRequest(asset.kind, nextCategory);
+    setStaged((prev) => [...prev, asset]);
+    setQuery('');
+    setOpen(false);
+    setInputError(null);
+    inputRef.current?.focus();
+  };
+
+  const handleSubmitQuery = () => {
+    const q = query.trim();
+    if (!q) return;
+    const qLower = q.toLowerCase();
+    const match = assets.find(
+      (a) => String(a.assetId) === q || (a.assetIdOld && a.assetIdOld.toLowerCase() === qLower),
+    );
+    if (!match) {
+      setInputError(`No eligible asset found for "${q}"`);
+      return;
+    }
+    addAsset(match);
+  };
+
+  const removeStaged = (key: string) => {
+    setStaged((prev) => prev.filter((a) => assetKey(a.kind, a.assetId) !== key));
+    setCategoryDraft((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
     });
+  };
+
+  const missingCategory = useMemo(
+    () =>
+      staged.filter((asset) => {
+        const key = assetKey(asset.kind, asset.assetId);
+        const nextCategory = categoryDraft[key] || asset.category;
+        return !categoryFitsRequest(asset.kind, nextCategory);
+      }),
+    [staged, categoryDraft],
+  );
+
+  const handleAssign = async () => {
+    if (staged.length === 0) {
+      toast.error('Stage at least one asset');
+      return;
+    }
     if (missingCategory.length > 0) {
-      toast.error('Set a request category for assets that do not match before adding them.');
+      toast.error('Set a request category for assets that do not match before assigning them.');
       return;
     }
     setAdding(true);
     try {
-      for (const asset of selectedAssets) {
+      for (const asset of staged) {
         const key = assetKey(asset.kind, asset.assetId);
         const nextCategory = categoryDraft[key];
         if (!nextCategory || categoryFitsRequest(asset.kind, asset.category)) continue;
@@ -165,7 +157,7 @@ export function TechnicianRequestAssetPage() {
       }
       const result = await markAssetsForRequestFn({
         data: {
-          assets: selectedAssets.map((a) => ({ kind: a.kind, assetId: a.assetId })),
+          assets: staged.map((a) => ({ kind: a.kind, assetId: a.assetId })),
         },
       });
       if (result.updated > 0) {
@@ -192,206 +184,208 @@ export function TechnicianRequestAssetPage() {
         <div>
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Add assets for request</h1>
           <p className="mt-1 max-w-xl text-xs text-muted-foreground sm:text-sm">
-            Select new or return laptop or AV assets. If a category does not match a request
-            category, set it before adding the asset to the request pool.
+            Type an asset ID or legacy ID and add it to your list. Once everything is listed,
+            assign the whole list to the request pool at once.
           </p>
         </div>
         <RequestToolbarActions />
       </div>
 
       <Card className="rounded-[14px] border-border shadow-sm">
-        <CardHeader className="flex flex-col gap-3 pb-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-          <div>
-            <CardTitle className="text-base">Eligible assets</CardTitle>
-            <CardDescription>
-              {filtered.length} shown · {assets.length} total · search by asset ID, legacy ID (AV), model, brand, category, or serial
-            </CardDescription>
-          </div>
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search asset ID, legacy ID, model, brand, serial…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-9 rounded-[8px] pl-9"
-            />
-          </div>
-          <ToggleGroup
-            type="single"
-            value={kindFilter}
-            onValueChange={(v) => {
-              if (v) setKindFilter(v as KindFilter);
-            }}
-            className="w-full justify-start sm:w-auto"
-          >
-            <ToggleGroupItem value="all" className="rounded-[8px] px-3 text-xs">
-              All
-            </ToggleGroupItem>
-            <ToggleGroupItem value="laptop" className="gap-1.5 rounded-[8px] px-3 text-xs">
-              <Laptop className="h-3.5 w-3.5" />
-              Laptop
-            </ToggleGroupItem>
-            <ToggleGroupItem value="av" className="gap-1.5 rounded-[8px] px-3 text-xs">
-              <Tv className="h-3.5 w-3.5" />
-              AV
-            </ToggleGroupItem>
-          </ToggleGroup>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Add asset to list</CardTitle>
+          <CardDescription>
+            {loading
+              ? 'Loading eligible assets…'
+              : `${assets.length} eligible new or return laptop/AV asset${assets.length === 1 ? '' : 's'}`}
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3 p-0 sm:p-0">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  ref={inputRef}
+                  placeholder="Asset ID or legacy ID…"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setInputError(null);
+                    setOpen(true);
+                  }}
+                  onFocus={() => setOpen(true)}
+                  onBlur={() => window.setTimeout(() => setOpen(false), 150)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSubmitQuery();
+                    }
+                  }}
+                  className="h-10 rounded-[8px] pl-9"
+                />
+              </div>
+              <Button
+                type="button"
+                className="gap-1.5 rounded-[8px]"
+                disabled={!query.trim()}
+                onClick={handleSubmitQuery}
+              >
+                <Plus className="h-4 w-4" />
+                Add
+              </Button>
+            </div>
+            {inputError ? (
+              <p className="mt-1.5 text-xs text-destructive">{inputError}</p>
+            ) : null}
+            {open && suggestions.length > 0 ? (
+              <div className="absolute z-20 mt-1 w-full max-w-md overflow-hidden rounded-[8px] border border-border bg-popover shadow-md">
+                <ul className="max-h-64 overflow-y-auto py-1">
+                  {suggestions.map((a) => {
+                    const key = assetKey(a.kind, a.assetId);
+                    return (
+                      <li key={key}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => addAsset(a)}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+                        >
+                          {a.kind === 'laptop' ? (
+                            <Laptop className="h-4 w-4 shrink-0 text-[oklch(0.45_0.12_290)]" />
+                          ) : (
+                            <Tv className="h-4 w-4 shrink-0 text-[oklch(0.45_0.12_290)]" />
+                          )}
+                          <code className="text-xs">{a.assetId}</code>
+                          {a.assetIdOld ? (
+                            <span className="text-xs text-muted-foreground">
+                              ({a.assetIdOld})
+                            </span>
+                          ) : null}
+                          <span className="truncate text-muted-foreground">
+                            {a.model ?? '—'}
+                          </span>
+                          <AssetStatusBadge statusId={a.statusId} className="ml-auto" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex items-center justify-between gap-2 border-t border-border pt-4">
             <p className="text-sm text-muted-foreground">
-              {selected.size} selected
-              {filtered.length !== assets.length && ` · ${filtered.length} shown`}
+              {staged.length} asset{staged.length === 1 ? '' : 's'} listed
             </p>
             <Button
               type="button"
               size="sm"
               className="gap-1.5 rounded-[8px]"
-              disabled={selected.size === 0 || adding}
-              onClick={() => void handleAdd()}
+              disabled={staged.length === 0 || adding || missingCategory.length > 0}
+              onClick={() => void handleAssign()}
             >
               <PackagePlus className="h-4 w-4" />
-              {adding ? 'Adding…' : 'Add to request pool'}
+              {adding ? 'Assigning…' : 'Assign to request pool'}
             </Button>
           </div>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={allFilteredSelected ? true : someFilteredSelected ? 'indeterminate' : false}
-                      onCheckedChange={(v) => toggleAllFiltered(v === true)}
-                      aria-label="Select all visible"
-                    />
-                  </TableHead>
-                  <TableHead className="font-semibold">Kind</TableHead>
-                  <TableHead className="font-semibold">ID</TableHead>
-                  <TableHead className="font-semibold">Model</TableHead>
-                  <TableHead className="font-semibold">Brand</TableHead>
-                  <TableHead className="font-semibold">Category</TableHead>
-                  <TableHead className="font-semibold">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                      Loading…
-                    </TableCell>
-                  </TableRow>
-                ) : filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                      {assets.length === 0
-                        ? 'No new or return laptop or AV assets found.'
-                        : 'No assets match your filters.'}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  pagination.paginatedItems.map((a) => {
-                    const key = assetKey(a.kind, a.assetId);
-                    return (
-                      <TableRow
-                        key={key}
-                        className="cursor-pointer"
-                        onClick={() => toggleOne(key, !selected.has(key))}
-                      >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selected.has(key)}
-                            onCheckedChange={(v) => toggleOne(key, v === true)}
-                            aria-label={`Select ${a.kind} ${a.assetId}`}
-                          />
-                        </TableCell>
-                        <KindCell kind={a.kind} />
-                        <TableCell>
-                          <code className="text-xs">{a.assetId}</code>
-                          {a.assetIdOld ? (
-                            <p className="text-[10px] text-muted-foreground">{a.assetIdOld}</p>
-                          ) : null}
-                        </TableCell>
-                        <TableCell className="font-medium">{a.model ?? '—'}</TableCell>
-                        <TableCell className="text-muted-foreground">{a.brand ?? '—'}</TableCell>
-                        <CategoryCell
-                          asset={a}
-                          draft={categoryDraft[key] ?? ''}
-                          onDraft={(category) =>
-                            setCategoryDraft((prev) => ({ ...prev, [key]: category }))
-                          }
-                        />
-                        <TableCell>
-                          <AssetStatusBadge statusId={a.statusId} />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          <AssetTablePagination
-            page={pagination.page}
-            totalPages={pagination.totalPages}
-            pageSize={pagination.pageSize}
-            rangeStart={pagination.rangeStart}
-            rangeEnd={pagination.rangeEnd}
-            totalItems={pagination.totalItems}
-            totalLoaded={assets.length}
-            onPageChange={pagination.setPage}
-            onPageSizeChange={pagination.setPageSize}
-          />
+
+          {staged.length === 0 ? (
+            <p className="rounded-[10px] border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
+              No assets listed yet. Search above to add one.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border rounded-[10px] border border-border">
+              {staged.map((asset) => (
+                <StagedRow
+                  key={assetKey(asset.kind, asset.assetId)}
+                  asset={asset}
+                  draft={categoryDraft[assetKey(asset.kind, asset.assetId)] ?? ''}
+                  onDraft={(category) =>
+                    setCategoryDraft((prev) => ({
+                      ...prev,
+                      [assetKey(asset.kind, asset.assetId)]: category,
+                    }))
+                  }
+                  onRemove={() => removeStaged(assetKey(asset.kind, asset.assetId))}
+                />
+              ))}
+            </ul>
+          )}
+          {missingCategory.length > 0 ? (
+            <p className="text-xs text-amber-600">
+              Set a category for the highlighted asset{missingCategory.length === 1 ? '' : 's'}{' '}
+              before assigning.
+            </p>
+          ) : null}
         </CardContent>
       </Card>
     </TechnicianShell>
   );
 }
 
-function CategoryCell({
+function StagedRow({
   asset,
   draft,
   onDraft,
+  onRemove,
 }: {
   asset: ActiveForRequestAsset;
   draft: string;
   onDraft: (category: string) => void;
+  onRemove: () => void;
 }) {
-  if (categoryFitsRequest(asset.kind, asset.category)) {
-    return <TableCell className="text-muted-foreground">{asset.category ?? '—'}</TableCell>;
-  }
-  return (
-    <TableCell onClick={(e) => e.stopPropagation()}>
-      <Select value={draft || undefined} onValueChange={onDraft}>
-        <SelectTrigger className="h-8 w-[11.5rem] rounded-[8px] text-xs">
-          <SelectValue placeholder="Set category" />
-        </SelectTrigger>
-        <SelectContent>
-          {categoryChoices(asset.kind).map((category) => (
-            <SelectItem key={category} value={category}>
-              {category}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {asset.category?.trim() ? (
-        <p className="mt-1 text-[10px] text-muted-foreground">Now: {asset.category}</p>
-      ) : null}
-    </TableCell>
-  );
-}
+  const needsCategory = !categoryFitsRequest(asset.kind, draft || asset.category);
 
-function KindCell({ kind }: { kind: RequestAssignableKind }) {
   return (
-    <TableCell>
-      <span className="inline-flex items-center gap-1.5 text-sm">
-        {kind === 'laptop' ? (
-          <Laptop className="h-4 w-4 text-[oklch(0.45_0.12_290)]" />
-        ) : (
-          <Tv className="h-4 w-4 text-[oklch(0.45_0.12_290)]" />
-        )}
-        {kind === 'laptop' ? 'Laptop' : 'AV'}
+    <li className="flex flex-wrap items-center gap-3 px-4 py-3">
+      {asset.kind === 'laptop' ? (
+        <Laptop className="h-4 w-4 shrink-0 text-[oklch(0.45_0.12_290)]" />
+      ) : (
+        <Tv className="h-4 w-4 shrink-0 text-[oklch(0.45_0.12_290)]" />
+      )}
+      <div className="min-w-[6rem]">
+        <code className="text-xs">{asset.assetId}</code>
+        {asset.assetIdOld ? (
+          <p className="text-[10px] text-muted-foreground">{asset.assetIdOld}</p>
+        ) : null}
+      </div>
+      <span className="min-w-[8rem] flex-1 truncate text-sm font-medium">
+        {asset.model ?? '—'}
       </span>
-    </TableCell>
+      <AssetStatusBadge statusId={asset.statusId} />
+      {needsCategory ? (
+        <div className="flex flex-col">
+          <Select value={draft || undefined} onValueChange={onDraft}>
+            <SelectTrigger className="h-8 w-[11.5rem] rounded-[8px] text-xs">
+              <SelectValue placeholder="Set category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryChoices(asset.kind).map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {asset.category?.trim() ? (
+            <p className="mt-1 text-[10px] text-muted-foreground">Now: {asset.category}</p>
+          ) : null}
+        </div>
+      ) : (
+        <span className="text-sm text-muted-foreground">{asset.category ?? '—'}</span>
+      )}
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        className="ml-auto h-8 w-8 rounded-[8px] text-muted-foreground hover:text-destructive"
+        onClick={onRemove}
+        aria-label={`Remove ${asset.kind} ${asset.assetId}`}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </li>
   );
 }
-
