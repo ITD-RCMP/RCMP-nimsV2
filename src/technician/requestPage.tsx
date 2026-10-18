@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   AlertTriangle,
@@ -36,13 +36,19 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command';
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import {
   Table,
   TableBody,
@@ -187,35 +193,117 @@ function groupPoolAssetsByCategory(assets: RequestPoolAsset[]): { label: string;
     .map(([label, items]) => ({ label, items }));
 }
 
-function GroupedPoolAssetOptions({ options }: { options: RequestPoolAsset[] }) {
-  const groups = groupPoolAssetsByCategory(options);
+function PoolAssetCombobox({
+  options,
+  onValueChange,
+  placeholder,
+  disabled,
+  resetKey,
+  currentDisplay,
+}: {
+  options: RequestPoolAsset[];
+  onValueChange: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  resetKey?: string | number;
+  currentDisplay?: {
+    assetId: number | string | null;
+    assetIdOld: string | null;
+    brand: string | null;
+    model: string | null;
+  } | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    setQuery('');
+    setOpen(false);
+  }, [resetKey]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((a) => poolAssetSearchText(a).toLowerCase().includes(q));
+  }, [options, query]);
+
+  const groups = useMemo(() => groupPoolAssetsByCategory(filtered), [filtered]);
+
+  const handleSelect = (value: string) => {
+    setOpen(false);
+    setQuery('');
+    onValueChange(value);
+  };
+
   return (
-    <>
-      {groups.map((g, gi) => (
-        <SelectGroup key={g.label}>
-          <SelectLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-            {g.label} ({g.items.length})
-          </SelectLabel>
-          {g.items.map((p) => (
-            <SelectItem
-              key={`${p.kind}-${p.assetId}`}
-              value={`${p.kind}:${p.assetId}`}
-              textValue={poolAssetSearchText(p)}
-              className="py-2"
-            >
-              <PoolAssetSelectDetails
-                assetId={p.assetId}
-                assetIdOld={p.assetIdOld}
-                category={p.category}
-                brand={p.brand}
-                model={p.model}
-              />
-            </SelectItem>
-          ))}
-          {gi < groups.length - 1 ? <SelectSeparator /> : null}
-        </SelectGroup>
-      ))}
-    </>
+    <div className="space-y-1">
+      {currentDisplay ? (
+        <div className="flex min-w-0 items-center rounded-[6px] border border-border bg-muted/30 px-2 py-1.5">
+          <PoolAssetSelectDetails
+            assetId={currentDisplay.assetId}
+            assetIdOld={currentDisplay.assetIdOld}
+            brand={currentDisplay.brand}
+            model={currentDisplay.model}
+          />
+        </div>
+      ) : null}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverAnchor asChild>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setOpen(true);
+              }}
+              onFocus={() => setOpen(true)}
+              placeholder={currentDisplay ? 'Change asset…' : (placeholder ?? 'Search assets…')}
+              disabled={disabled}
+              className="h-8 w-full rounded-[6px] border border-input bg-background pl-8 pr-3 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+        </PopoverAnchor>
+        <PopoverContent
+          align="start"
+          className="w-[min(100vw-2rem,24rem)] p-0"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <Command shouldFilter={false}>
+            <CommandList>
+              {groups.length === 0 ? (
+                <CommandEmpty>
+                  {query.trim() ? 'No assets match.' : `No assets in pool.`}
+                </CommandEmpty>
+              ) : (
+                groups.map((g, gi) => (
+                  <Fragment key={g.label}>
+                    <CommandGroup heading={`${g.label} (${g.items.length})`}>
+                      {g.items.map((p) => (
+                        <CommandItem
+                          key={`${p.kind}-${p.assetId}`}
+                          value={`${p.kind}:${p.assetId}`}
+                          onSelect={handleSelect}
+                          className="py-2"
+                        >
+                          <PoolAssetSelectDetails
+                            assetId={p.assetId}
+                            assetIdOld={p.assetIdOld}
+                            brand={p.brand}
+                            model={p.model}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                    {gi < groups.length - 1 ? <CommandSeparator /> : null}
+                  </Fragment>
+                ))
+              )}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
 
@@ -1080,47 +1168,14 @@ export function TechnicianRequestPage() {
                                   ) : null}
                                 </span>
                               ) : !isCheckedOut && a.assetStatusId === REQUEST_STATUS_BOOKED ? (
-                                <Select
-                                  value={`${a.kind}:${a.assetId}`}
-                                  disabled={
-                                    changingAssignmentId === a.assignmentId || options.length === 0
-                                  }
+                                <PoolAssetCombobox
+                                  options={options.filter(
+                                    (p) => `${p.kind}:${p.assetId}` !== `${a.kind}:${a.assetId}`,
+                                  )}
+                                  disabled={changingAssignmentId === a.assignmentId}
                                   onValueChange={(v) => void handleChangeBooked(a, v, requestedItem)}
-                                >
-                                  <SelectTrigger className="h-auto min-h-8 max-w-md rounded-[6px] py-1.5 text-xs [&>span]:line-clamp-none">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="min-w-[min(100vw-2rem,24rem)]">
-                                    <SelectGroup>
-                                      <SelectLabel className="px-2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                                        Current
-                                      </SelectLabel>
-                                      <SelectItem
-                                        value={`${a.kind}:${a.assetId}`}
-                                        textValue={poolAssetSearchText(a)}
-                                        className="py-2"
-                                      >
-                                        <PoolAssetSelectDetails
-                                          assetId={a.assetId}
-                                          assetIdOld={a.assetIdOld}
-                                          category={null}
-                                          brand={a.brand}
-                                          model={a.model}
-                                        />
-                                      </SelectItem>
-                                    </SelectGroup>
-                                    {options.filter((p) => `${p.kind}:${p.assetId}` !== `${a.kind}:${a.assetId}`).length > 0 ? (
-                                      <>
-                                        <SelectSeparator />
-                                        <GroupedPoolAssetOptions
-                                          options={options.filter(
-                                            (p) => `${p.kind}:${p.assetId}` !== `${a.kind}:${a.assetId}`,
-                                          )}
-                                        />
-                                      </>
-                                    ) : null}
-                                  </SelectContent>
-                                </Select>
+                                  currentDisplay={{ assetId: a.assetId, assetIdOld: a.assetIdOld, brand: a.brand, model: a.model }}
+                                />
                               ) : (
                                 <span className="inline-flex items-start gap-1.5 text-sm">
                                   {a.kind === 'laptop' ? (
@@ -1210,32 +1265,13 @@ export function TechnicianRequestPage() {
                         ) : (
                           <>
                             <TableCell>
-                              <Select
-                                key={`${slotId}-${slotSelectKey}`}
+                              <PoolAssetCombobox
+                                resetKey={`${slotId}-${slotSelectKey}`}
+                                options={options}
                                 disabled={actionKey === bookKey}
-                                onValueChange={(v) =>
-                                  void handleBookOnSelect(req, group, v, requestedItem)
-                                }
-                              >
-                                <SelectTrigger className="h-auto min-h-8 max-w-md rounded-[6px] py-1.5 text-xs [&>span]:line-clamp-none">
-                                  <SelectValue
-                                    placeholder={
-                                      actionKey === bookKey
-                                        ? 'Booking…'
-                                        : `Select ${group.label}…`
-                                    }
-                                  />
-                                </SelectTrigger>
-                                <SelectContent className="min-w-[min(100vw-2rem,24rem)]">
-                                  {options.length === 0 ? (
-                                    <SelectItem value="_none" disabled>
-                                      {`No ${group.label} assets in pool`}
-                                    </SelectItem>
-                                  ) : (
-                                    <GroupedPoolAssetOptions options={options} />
-                                  )}
-                                </SelectContent>
-                              </Select>
+                                placeholder={actionKey === bookKey ? 'Booking…' : `Select ${group.label}…`}
+                                onValueChange={(v) => void handleBookOnSelect(req, group, v, requestedItem)}
+                              />
                             </TableCell>
                             <TableCell>
                               <span className="text-xs text-muted-foreground">
