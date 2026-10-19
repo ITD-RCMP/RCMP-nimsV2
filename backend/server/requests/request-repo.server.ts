@@ -1129,7 +1129,7 @@ export async function listPendingRequests(): Promise<PendingRequest[]> {
      FROM request r
      INNER JOIN users u ON u.id = r.requested_by
      WHERE r.rejected_at IS NULL
-     ORDER BY r.created_at DESC`,
+     ORDER BY r.borrow_date ASC, r.created_at ASC`,
   );
   await attachDisplayNames(headers, 'requester_oid', 'requester_name');
   const requesterProfiles = await Promise.all(

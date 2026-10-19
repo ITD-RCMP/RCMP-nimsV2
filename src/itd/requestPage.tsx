@@ -467,9 +467,9 @@ function classifyRequests(requests: PendingRequest[]): RequestQueues {
     if (requestIsPending(req)) pending.push(req);
   }
 
-  overdue.sort((a, b) => a.returnDate.localeCompare(b.returnDate));
-  toReturn.sort((a, b) => a.returnDate.localeCompare(b.returnDate));
-  pending.sort((a, b) => a.borrowDate.localeCompare(b.borrowDate));
+  overdue.sort((a, b) => a.returnDate.localeCompare(b.returnDate) || a.createdAt.localeCompare(b.createdAt));
+  toReturn.sort((a, b) => a.returnDate.localeCompare(b.returnDate) || a.createdAt.localeCompare(b.createdAt));
+  pending.sort((a, b) => a.borrowDate.localeCompare(b.borrowDate) || a.createdAt.localeCompare(b.createdAt));
 
   return { overdue, toReturn, pending };
 }
