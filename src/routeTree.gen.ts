@@ -20,30 +20,30 @@ import { Route as AdminNetworkRouteImport } from './routes/admin/network'
 import { Route as AdminRequestRouteImport } from './routes/admin/request'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as DisposalUnitDashboardRouteImport } from './routes/disposal-unit/dashboard'
-import { Route as DisposalUnitDisposalRouteImport } from './routes/disposal-unit/disposal'
-import { Route as DisposalUnitDisposalFormRouteImport } from './routes/disposal-unit/disposal-form'
-import { Route as DisposalUnitHistoryRouteImport } from './routes/disposal-unit/history'
-import { Route as TechnicianAddAssetRouteImport } from './routes/technician/add-asset'
-import { Route as TechnicianAvRouteImport } from './routes/technician/av'
-import { Route as TechnicianBulkImportRouteImport } from './routes/technician/bulk-import'
-import { Route as TechnicianDashboardRouteImport } from './routes/technician/dashboard'
-import { Route as TechnicianDeployRouteImport } from './routes/technician/deploy'
-import { Route as TechnicianDisposalRouteImport } from './routes/technician/disposal'
-import { Route as TechnicianDisposedRouteImport } from './routes/technician/disposed'
-import { Route as TechnicianHandoverStaffRouteImport } from './routes/technician/handover-staff'
-import { Route as TechnicianHistoryRouteImport } from './routes/technician/history'
-import { Route as TechnicianLaptopRouteImport } from './routes/technician/laptop'
-import { Route as TechnicianNetworkRouteImport } from './routes/technician/network'
-import { Route as TechnicianPmFormRouteImport } from './routes/technician/pm-form'
-import { Route as TechnicianPreDisposedRouteImport } from './routes/technician/pre-disposed'
-import { Route as TechnicianPreventiveMaintenanceRouteImport } from './routes/technician/preventive-maintenance'
-import { Route as TechnicianReportRouteImport } from './routes/technician/report'
-import { Route as TechnicianRequestAssetsRouteImport } from './routes/technician/request-assets'
-import { Route as TechnicianRequestLogRouteImport } from './routes/technician/request-log'
-import { Route as TechnicianRequestViewRouteImport } from './routes/technician/request-view'
-import { Route as TechnicianRequestsRouteImport } from './routes/technician/requests'
-import { Route as TechnicianReturnRouteImport } from './routes/technician/return'
+import { Route as AdmindDashboardRouteImport } from './routes/admind/dashboard'
+import { Route as AdmindDisposalRouteImport } from './routes/admind/disposal'
+import { Route as AdmindDisposalFormRouteImport } from './routes/admind/disposal-form'
+import { Route as AdmindHistoryRouteImport } from './routes/admind/history'
+import { Route as ItdAddAssetRouteImport } from './routes/itd/add-asset'
+import { Route as ItdAvRouteImport } from './routes/itd/av'
+import { Route as ItdBulkImportRouteImport } from './routes/itd/bulk-import'
+import { Route as ItdDashboardRouteImport } from './routes/itd/dashboard'
+import { Route as ItdDeployRouteImport } from './routes/itd/deploy'
+import { Route as ItdDisposalRouteImport } from './routes/itd/disposal'
+import { Route as ItdDisposedRouteImport } from './routes/itd/disposed'
+import { Route as ItdHandoverStaffRouteImport } from './routes/itd/handover-staff'
+import { Route as ItdHistoryRouteImport } from './routes/itd/history'
+import { Route as ItdLaptopRouteImport } from './routes/itd/laptop'
+import { Route as ItdNetworkRouteImport } from './routes/itd/network'
+import { Route as ItdPmFormRouteImport } from './routes/itd/pm-form'
+import { Route as ItdPreDisposedRouteImport } from './routes/itd/pre-disposed'
+import { Route as ItdPreventiveMaintenanceRouteImport } from './routes/itd/preventive-maintenance'
+import { Route as ItdReportRouteImport } from './routes/itd/report'
+import { Route as ItdRequestAssetsRouteImport } from './routes/itd/request-assets'
+import { Route as ItdRequestLogRouteImport } from './routes/itd/request-log'
+import { Route as ItdRequestViewRouteImport } from './routes/itd/request-view'
+import { Route as ItdRequestsRouteImport } from './routes/itd/requests'
+import { Route as ItdReturnRouteImport } from './routes/itd/return'
 import { Route as UserEditProfileRouteImport } from './routes/user/edit-profile'
 import { Route as UserHistoryRouteImport } from './routes/user/history'
 import { Route as UserRequestRouteImport } from './routes/user/request'
@@ -51,7 +51,7 @@ import { Route as ApiCronOverdueReturnEmailsRouteImport } from './routes/api/cro
 import { Route as AdminAssetKindAssetIdRouteImport } from './routes/admin/asset.$kind.$assetId'
 import { Route as ApiAuthMicrosoftCallbackRouteImport } from './routes/api/auth/microsoft.callback'
 import { Route as ApiAuthSessionPingRouteImport } from './routes/api/auth/session.ping'
-import { Route as TechnicianAssetKindAssetIdRouteImport } from './routes/technician/asset.$kind.$assetId'
+import { Route as ItdAssetKindAssetIdRouteImport } from './routes/itd/asset.$kind.$assetId'
 import { Route as UploadDisposeYearBatchFileNameRouteImport } from './routes/upload/dispose.$year.$batch.$fileName'
 import { Route as UploadPictureKindAssetIdFileNameRouteImport } from './routes/upload/picture.$kind.$assetId.$fileName'
 import { Route as UploadYearDisposePictureAssetIdFileNameRouteImport } from './routes/upload/$year.dispose.picture.$assetId.$fileName'
@@ -111,126 +111,125 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DisposalUnitDashboardRoute = DisposalUnitDashboardRouteImport.update({
-  id: '/disposal-unit/dashboard',
-  path: '/disposal-unit/dashboard',
+const AdmindDashboardRoute = AdmindDashboardRouteImport.update({
+  id: '/admind/dashboard',
+  path: '/admind/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DisposalUnitDisposalRoute = DisposalUnitDisposalRouteImport.update({
-  id: '/disposal-unit/disposal',
-  path: '/disposal-unit/disposal',
+const AdmindDisposalRoute = AdmindDisposalRouteImport.update({
+  id: '/admind/disposal',
+  path: '/admind/disposal',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DisposalUnitDisposalFormRoute =
-  DisposalUnitDisposalFormRouteImport.update({
-    id: '/disposal-unit/disposal-form',
-    path: '/disposal-unit/disposal-form',
+const AdmindDisposalFormRoute = AdmindDisposalFormRouteImport.update({
+  id: '/admind/disposal-form',
+  path: '/admind/disposal-form',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdmindHistoryRoute = AdmindHistoryRouteImport.update({
+  id: '/admind/history',
+  path: '/admind/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdAddAssetRoute = ItdAddAssetRouteImport.update({
+  id: '/itd/add-asset',
+  path: '/itd/add-asset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdAvRoute = ItdAvRouteImport.update({
+  id: '/itd/av',
+  path: '/itd/av',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdBulkImportRoute = ItdBulkImportRouteImport.update({
+  id: '/itd/bulk-import',
+  path: '/itd/bulk-import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdDashboardRoute = ItdDashboardRouteImport.update({
+  id: '/itd/dashboard',
+  path: '/itd/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdDeployRoute = ItdDeployRouteImport.update({
+  id: '/itd/deploy',
+  path: '/itd/deploy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdDisposalRoute = ItdDisposalRouteImport.update({
+  id: '/itd/disposal',
+  path: '/itd/disposal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdDisposedRoute = ItdDisposedRouteImport.update({
+  id: '/itd/disposed',
+  path: '/itd/disposed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdHandoverStaffRoute = ItdHandoverStaffRouteImport.update({
+  id: '/itd/handover-staff',
+  path: '/itd/handover-staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdHistoryRoute = ItdHistoryRouteImport.update({
+  id: '/itd/history',
+  path: '/itd/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdLaptopRoute = ItdLaptopRouteImport.update({
+  id: '/itd/laptop',
+  path: '/itd/laptop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdNetworkRoute = ItdNetworkRouteImport.update({
+  id: '/itd/network',
+  path: '/itd/network',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdPmFormRoute = ItdPmFormRouteImport.update({
+  id: '/itd/pm-form',
+  path: '/itd/pm-form',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdPreDisposedRoute = ItdPreDisposedRouteImport.update({
+  id: '/itd/pre-disposed',
+  path: '/itd/pre-disposed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItdPreventiveMaintenanceRoute =
+  ItdPreventiveMaintenanceRouteImport.update({
+    id: '/itd/preventive-maintenance',
+    path: '/itd/preventive-maintenance',
     getParentRoute: () => rootRouteImport,
   } as any)
-const DisposalUnitHistoryRoute = DisposalUnitHistoryRouteImport.update({
-  id: '/disposal-unit/history',
-  path: '/disposal-unit/history',
+const ItdReportRoute = ItdReportRouteImport.update({
+  id: '/itd/report',
+  path: '/itd/report',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TechnicianAddAssetRoute = TechnicianAddAssetRouteImport.update({
-  id: '/technician/add-asset',
-  path: '/technician/add-asset',
+const ItdRequestAssetsRoute = ItdRequestAssetsRouteImport.update({
+  id: '/itd/request-assets',
+  path: '/itd/request-assets',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TechnicianAvRoute = TechnicianAvRouteImport.update({
-  id: '/technician/av',
-  path: '/technician/av',
+const ItdRequestLogRoute = ItdRequestLogRouteImport.update({
+  id: '/itd/request-log',
+  path: '/itd/request-log',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TechnicianBulkImportRoute = TechnicianBulkImportRouteImport.update({
-  id: '/technician/bulk-import',
-  path: '/technician/bulk-import',
+const ItdRequestViewRoute = ItdRequestViewRouteImport.update({
+  id: '/itd/request-view',
+  path: '/itd/request-view',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TechnicianDashboardRoute = TechnicianDashboardRouteImport.update({
-  id: '/technician/dashboard',
-  path: '/technician/dashboard',
+const ItdRequestsRoute = ItdRequestsRouteImport.update({
+  id: '/itd/requests',
+  path: '/itd/requests',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TechnicianDeployRoute = TechnicianDeployRouteImport.update({
-  id: '/technician/deploy',
-  path: '/technician/deploy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianDisposalRoute = TechnicianDisposalRouteImport.update({
-  id: '/technician/disposal',
-  path: '/technician/disposal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianDisposedRoute = TechnicianDisposedRouteImport.update({
-  id: '/technician/disposed',
-  path: '/technician/disposed',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianHandoverStaffRoute = TechnicianHandoverStaffRouteImport.update({
-  id: '/technician/handover-staff',
-  path: '/technician/handover-staff',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianHistoryRoute = TechnicianHistoryRouteImport.update({
-  id: '/technician/history',
-  path: '/technician/history',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianLaptopRoute = TechnicianLaptopRouteImport.update({
-  id: '/technician/laptop',
-  path: '/technician/laptop',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianNetworkRoute = TechnicianNetworkRouteImport.update({
-  id: '/technician/network',
-  path: '/technician/network',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianPmFormRoute = TechnicianPmFormRouteImport.update({
-  id: '/technician/pm-form',
-  path: '/technician/pm-form',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianPreDisposedRoute = TechnicianPreDisposedRouteImport.update({
-  id: '/technician/pre-disposed',
-  path: '/technician/pre-disposed',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianPreventiveMaintenanceRoute =
-  TechnicianPreventiveMaintenanceRouteImport.update({
-    id: '/technician/preventive-maintenance',
-    path: '/technician/preventive-maintenance',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const TechnicianReportRoute = TechnicianReportRouteImport.update({
-  id: '/technician/report',
-  path: '/technician/report',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianRequestAssetsRoute = TechnicianRequestAssetsRouteImport.update({
-  id: '/technician/request-assets',
-  path: '/technician/request-assets',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianRequestLogRoute = TechnicianRequestLogRouteImport.update({
-  id: '/technician/request-log',
-  path: '/technician/request-log',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianRequestViewRoute = TechnicianRequestViewRouteImport.update({
-  id: '/technician/request-view',
-  path: '/technician/request-view',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianRequestsRoute = TechnicianRequestsRouteImport.update({
-  id: '/technician/requests',
-  path: '/technician/requests',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TechnicianReturnRoute = TechnicianReturnRouteImport.update({
-  id: '/technician/return',
-  path: '/technician/return',
+const ItdReturnRoute = ItdReturnRouteImport.update({
+  id: '/itd/return',
+  path: '/itd/return',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UserEditProfileRoute = UserEditProfileRouteImport.update({
@@ -270,12 +269,11 @@ const ApiAuthSessionPingRoute = ApiAuthSessionPingRouteImport.update({
   path: '/api/auth/session/ping',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TechnicianAssetKindAssetIdRoute =
-  TechnicianAssetKindAssetIdRouteImport.update({
-    id: '/technician/asset/$kind/$assetId',
-    path: '/technician/asset/$kind/$assetId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const ItdAssetKindAssetIdRoute = ItdAssetKindAssetIdRouteImport.update({
+  id: '/itd/asset/$kind/$assetId',
+  path: '/itd/asset/$kind/$assetId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UploadDisposeYearBatchFileNameRoute =
   UploadDisposeYearBatchFileNameRouteImport.update({
     id: '/upload/dispose/$year/$batch/$fileName',
@@ -307,30 +305,30 @@ export interface FileRoutesByFullPath {
   '/admin/request': typeof AdminRequestRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
-  '/disposal-unit/dashboard': typeof DisposalUnitDashboardRoute
-  '/disposal-unit/disposal': typeof DisposalUnitDisposalRoute
-  '/disposal-unit/disposal-form': typeof DisposalUnitDisposalFormRoute
-  '/disposal-unit/history': typeof DisposalUnitHistoryRoute
-  '/technician/add-asset': typeof TechnicianAddAssetRoute
-  '/technician/av': typeof TechnicianAvRoute
-  '/technician/bulk-import': typeof TechnicianBulkImportRoute
-  '/technician/dashboard': typeof TechnicianDashboardRoute
-  '/technician/deploy': typeof TechnicianDeployRoute
-  '/technician/disposal': typeof TechnicianDisposalRoute
-  '/technician/disposed': typeof TechnicianDisposedRoute
-  '/technician/handover-staff': typeof TechnicianHandoverStaffRoute
-  '/technician/history': typeof TechnicianHistoryRoute
-  '/technician/laptop': typeof TechnicianLaptopRoute
-  '/technician/network': typeof TechnicianNetworkRoute
-  '/technician/pm-form': typeof TechnicianPmFormRoute
-  '/technician/pre-disposed': typeof TechnicianPreDisposedRoute
-  '/technician/preventive-maintenance': typeof TechnicianPreventiveMaintenanceRoute
-  '/technician/report': typeof TechnicianReportRoute
-  '/technician/request-assets': typeof TechnicianRequestAssetsRoute
-  '/technician/request-log': typeof TechnicianRequestLogRoute
-  '/technician/request-view': typeof TechnicianRequestViewRoute
-  '/technician/requests': typeof TechnicianRequestsRoute
-  '/technician/return': typeof TechnicianReturnRoute
+  '/admind/dashboard': typeof AdmindDashboardRoute
+  '/admind/disposal': typeof AdmindDisposalRoute
+  '/admind/disposal-form': typeof AdmindDisposalFormRoute
+  '/admind/history': typeof AdmindHistoryRoute
+  '/itd/add-asset': typeof ItdAddAssetRoute
+  '/itd/av': typeof ItdAvRoute
+  '/itd/bulk-import': typeof ItdBulkImportRoute
+  '/itd/dashboard': typeof ItdDashboardRoute
+  '/itd/deploy': typeof ItdDeployRoute
+  '/itd/disposal': typeof ItdDisposalRoute
+  '/itd/disposed': typeof ItdDisposedRoute
+  '/itd/handover-staff': typeof ItdHandoverStaffRoute
+  '/itd/history': typeof ItdHistoryRoute
+  '/itd/laptop': typeof ItdLaptopRoute
+  '/itd/network': typeof ItdNetworkRoute
+  '/itd/pm-form': typeof ItdPmFormRoute
+  '/itd/pre-disposed': typeof ItdPreDisposedRoute
+  '/itd/preventive-maintenance': typeof ItdPreventiveMaintenanceRoute
+  '/itd/report': typeof ItdReportRoute
+  '/itd/request-assets': typeof ItdRequestAssetsRoute
+  '/itd/request-log': typeof ItdRequestLogRoute
+  '/itd/request-view': typeof ItdRequestViewRoute
+  '/itd/requests': typeof ItdRequestsRoute
+  '/itd/return': typeof ItdReturnRoute
   '/user/edit-profile': typeof UserEditProfileRoute
   '/user/history': typeof UserHistoryRoute
   '/user/request': typeof UserRequestRoute
@@ -338,7 +336,7 @@ export interface FileRoutesByFullPath {
   '/admin/asset/$kind/$assetId': typeof AdminAssetKindAssetIdRoute
   '/api/auth/microsoft/callback': typeof ApiAuthMicrosoftCallbackRoute
   '/api/auth/session/ping': typeof ApiAuthSessionPingRoute
-  '/technician/asset/$kind/$assetId': typeof TechnicianAssetKindAssetIdRoute
+  '/itd/asset/$kind/$assetId': typeof ItdAssetKindAssetIdRoute
   '/upload/dispose/$year/$batch/$fileName': typeof UploadDisposeYearBatchFileNameRoute
   '/upload/picture/$kind/$assetId/$fileName': typeof UploadPictureKindAssetIdFileNameRoute
   '/upload/$year/dispose/picture/$assetId/$fileName': typeof UploadYearDisposePictureAssetIdFileNameRoute
@@ -355,30 +353,30 @@ export interface FileRoutesByTo {
   '/admin/request': typeof AdminRequestRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
-  '/disposal-unit/dashboard': typeof DisposalUnitDashboardRoute
-  '/disposal-unit/disposal': typeof DisposalUnitDisposalRoute
-  '/disposal-unit/disposal-form': typeof DisposalUnitDisposalFormRoute
-  '/disposal-unit/history': typeof DisposalUnitHistoryRoute
-  '/technician/add-asset': typeof TechnicianAddAssetRoute
-  '/technician/av': typeof TechnicianAvRoute
-  '/technician/bulk-import': typeof TechnicianBulkImportRoute
-  '/technician/dashboard': typeof TechnicianDashboardRoute
-  '/technician/deploy': typeof TechnicianDeployRoute
-  '/technician/disposal': typeof TechnicianDisposalRoute
-  '/technician/disposed': typeof TechnicianDisposedRoute
-  '/technician/handover-staff': typeof TechnicianHandoverStaffRoute
-  '/technician/history': typeof TechnicianHistoryRoute
-  '/technician/laptop': typeof TechnicianLaptopRoute
-  '/technician/network': typeof TechnicianNetworkRoute
-  '/technician/pm-form': typeof TechnicianPmFormRoute
-  '/technician/pre-disposed': typeof TechnicianPreDisposedRoute
-  '/technician/preventive-maintenance': typeof TechnicianPreventiveMaintenanceRoute
-  '/technician/report': typeof TechnicianReportRoute
-  '/technician/request-assets': typeof TechnicianRequestAssetsRoute
-  '/technician/request-log': typeof TechnicianRequestLogRoute
-  '/technician/request-view': typeof TechnicianRequestViewRoute
-  '/technician/requests': typeof TechnicianRequestsRoute
-  '/technician/return': typeof TechnicianReturnRoute
+  '/admind/dashboard': typeof AdmindDashboardRoute
+  '/admind/disposal': typeof AdmindDisposalRoute
+  '/admind/disposal-form': typeof AdmindDisposalFormRoute
+  '/admind/history': typeof AdmindHistoryRoute
+  '/itd/add-asset': typeof ItdAddAssetRoute
+  '/itd/av': typeof ItdAvRoute
+  '/itd/bulk-import': typeof ItdBulkImportRoute
+  '/itd/dashboard': typeof ItdDashboardRoute
+  '/itd/deploy': typeof ItdDeployRoute
+  '/itd/disposal': typeof ItdDisposalRoute
+  '/itd/disposed': typeof ItdDisposedRoute
+  '/itd/handover-staff': typeof ItdHandoverStaffRoute
+  '/itd/history': typeof ItdHistoryRoute
+  '/itd/laptop': typeof ItdLaptopRoute
+  '/itd/network': typeof ItdNetworkRoute
+  '/itd/pm-form': typeof ItdPmFormRoute
+  '/itd/pre-disposed': typeof ItdPreDisposedRoute
+  '/itd/preventive-maintenance': typeof ItdPreventiveMaintenanceRoute
+  '/itd/report': typeof ItdReportRoute
+  '/itd/request-assets': typeof ItdRequestAssetsRoute
+  '/itd/request-log': typeof ItdRequestLogRoute
+  '/itd/request-view': typeof ItdRequestViewRoute
+  '/itd/requests': typeof ItdRequestsRoute
+  '/itd/return': typeof ItdReturnRoute
   '/user/edit-profile': typeof UserEditProfileRoute
   '/user/history': typeof UserHistoryRoute
   '/user/request': typeof UserRequestRoute
@@ -386,7 +384,7 @@ export interface FileRoutesByTo {
   '/admin/asset/$kind/$assetId': typeof AdminAssetKindAssetIdRoute
   '/api/auth/microsoft/callback': typeof ApiAuthMicrosoftCallbackRoute
   '/api/auth/session/ping': typeof ApiAuthSessionPingRoute
-  '/technician/asset/$kind/$assetId': typeof TechnicianAssetKindAssetIdRoute
+  '/itd/asset/$kind/$assetId': typeof ItdAssetKindAssetIdRoute
   '/upload/dispose/$year/$batch/$fileName': typeof UploadDisposeYearBatchFileNameRoute
   '/upload/picture/$kind/$assetId/$fileName': typeof UploadPictureKindAssetIdFileNameRoute
   '/upload/$year/dispose/picture/$assetId/$fileName': typeof UploadYearDisposePictureAssetIdFileNameRoute
@@ -404,30 +402,30 @@ export interface FileRoutesById {
   '/admin/request': typeof AdminRequestRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
-  '/disposal-unit/dashboard': typeof DisposalUnitDashboardRoute
-  '/disposal-unit/disposal': typeof DisposalUnitDisposalRoute
-  '/disposal-unit/disposal-form': typeof DisposalUnitDisposalFormRoute
-  '/disposal-unit/history': typeof DisposalUnitHistoryRoute
-  '/technician/add-asset': typeof TechnicianAddAssetRoute
-  '/technician/av': typeof TechnicianAvRoute
-  '/technician/bulk-import': typeof TechnicianBulkImportRoute
-  '/technician/dashboard': typeof TechnicianDashboardRoute
-  '/technician/deploy': typeof TechnicianDeployRoute
-  '/technician/disposal': typeof TechnicianDisposalRoute
-  '/technician/disposed': typeof TechnicianDisposedRoute
-  '/technician/handover-staff': typeof TechnicianHandoverStaffRoute
-  '/technician/history': typeof TechnicianHistoryRoute
-  '/technician/laptop': typeof TechnicianLaptopRoute
-  '/technician/network': typeof TechnicianNetworkRoute
-  '/technician/pm-form': typeof TechnicianPmFormRoute
-  '/technician/pre-disposed': typeof TechnicianPreDisposedRoute
-  '/technician/preventive-maintenance': typeof TechnicianPreventiveMaintenanceRoute
-  '/technician/report': typeof TechnicianReportRoute
-  '/technician/request-assets': typeof TechnicianRequestAssetsRoute
-  '/technician/request-log': typeof TechnicianRequestLogRoute
-  '/technician/request-view': typeof TechnicianRequestViewRoute
-  '/technician/requests': typeof TechnicianRequestsRoute
-  '/technician/return': typeof TechnicianReturnRoute
+  '/admind/dashboard': typeof AdmindDashboardRoute
+  '/admind/disposal': typeof AdmindDisposalRoute
+  '/admind/disposal-form': typeof AdmindDisposalFormRoute
+  '/admind/history': typeof AdmindHistoryRoute
+  '/itd/add-asset': typeof ItdAddAssetRoute
+  '/itd/av': typeof ItdAvRoute
+  '/itd/bulk-import': typeof ItdBulkImportRoute
+  '/itd/dashboard': typeof ItdDashboardRoute
+  '/itd/deploy': typeof ItdDeployRoute
+  '/itd/disposal': typeof ItdDisposalRoute
+  '/itd/disposed': typeof ItdDisposedRoute
+  '/itd/handover-staff': typeof ItdHandoverStaffRoute
+  '/itd/history': typeof ItdHistoryRoute
+  '/itd/laptop': typeof ItdLaptopRoute
+  '/itd/network': typeof ItdNetworkRoute
+  '/itd/pm-form': typeof ItdPmFormRoute
+  '/itd/pre-disposed': typeof ItdPreDisposedRoute
+  '/itd/preventive-maintenance': typeof ItdPreventiveMaintenanceRoute
+  '/itd/report': typeof ItdReportRoute
+  '/itd/request-assets': typeof ItdRequestAssetsRoute
+  '/itd/request-log': typeof ItdRequestLogRoute
+  '/itd/request-view': typeof ItdRequestViewRoute
+  '/itd/requests': typeof ItdRequestsRoute
+  '/itd/return': typeof ItdReturnRoute
   '/user/edit-profile': typeof UserEditProfileRoute
   '/user/history': typeof UserHistoryRoute
   '/user/request': typeof UserRequestRoute
@@ -435,7 +433,7 @@ export interface FileRoutesById {
   '/admin/asset/$kind/$assetId': typeof AdminAssetKindAssetIdRoute
   '/api/auth/microsoft/callback': typeof ApiAuthMicrosoftCallbackRoute
   '/api/auth/session/ping': typeof ApiAuthSessionPingRoute
-  '/technician/asset/$kind/$assetId': typeof TechnicianAssetKindAssetIdRoute
+  '/itd/asset/$kind/$assetId': typeof ItdAssetKindAssetIdRoute
   '/upload/dispose/$year/$batch/$fileName': typeof UploadDisposeYearBatchFileNameRoute
   '/upload/picture/$kind/$assetId/$fileName': typeof UploadPictureKindAssetIdFileNameRoute
   '/upload/$year/dispose/picture/$assetId/$fileName': typeof UploadYearDisposePictureAssetIdFileNameRoute
@@ -454,30 +452,30 @@ export interface FileRouteTypes {
     | '/admin/request'
     | '/admin/settings'
     | '/admin/users'
-    | '/disposal-unit/dashboard'
-    | '/disposal-unit/disposal'
-    | '/disposal-unit/disposal-form'
-    | '/disposal-unit/history'
-    | '/technician/add-asset'
-    | '/technician/av'
-    | '/technician/bulk-import'
-    | '/technician/dashboard'
-    | '/technician/deploy'
-    | '/technician/disposal'
-    | '/technician/disposed'
-    | '/technician/handover-staff'
-    | '/technician/history'
-    | '/technician/laptop'
-    | '/technician/network'
-    | '/technician/pm-form'
-    | '/technician/pre-disposed'
-    | '/technician/preventive-maintenance'
-    | '/technician/report'
-    | '/technician/request-assets'
-    | '/technician/request-log'
-    | '/technician/request-view'
-    | '/technician/requests'
-    | '/technician/return'
+    | '/admind/dashboard'
+    | '/admind/disposal'
+    | '/admind/disposal-form'
+    | '/admind/history'
+    | '/itd/add-asset'
+    | '/itd/av'
+    | '/itd/bulk-import'
+    | '/itd/dashboard'
+    | '/itd/deploy'
+    | '/itd/disposal'
+    | '/itd/disposed'
+    | '/itd/handover-staff'
+    | '/itd/history'
+    | '/itd/laptop'
+    | '/itd/network'
+    | '/itd/pm-form'
+    | '/itd/pre-disposed'
+    | '/itd/preventive-maintenance'
+    | '/itd/report'
+    | '/itd/request-assets'
+    | '/itd/request-log'
+    | '/itd/request-view'
+    | '/itd/requests'
+    | '/itd/return'
     | '/user/edit-profile'
     | '/user/history'
     | '/user/request'
@@ -485,7 +483,7 @@ export interface FileRouteTypes {
     | '/admin/asset/$kind/$assetId'
     | '/api/auth/microsoft/callback'
     | '/api/auth/session/ping'
-    | '/technician/asset/$kind/$assetId'
+    | '/itd/asset/$kind/$assetId'
     | '/upload/dispose/$year/$batch/$fileName'
     | '/upload/picture/$kind/$assetId/$fileName'
     | '/upload/$year/dispose/picture/$assetId/$fileName'
@@ -502,30 +500,30 @@ export interface FileRouteTypes {
     | '/admin/request'
     | '/admin/settings'
     | '/admin/users'
-    | '/disposal-unit/dashboard'
-    | '/disposal-unit/disposal'
-    | '/disposal-unit/disposal-form'
-    | '/disposal-unit/history'
-    | '/technician/add-asset'
-    | '/technician/av'
-    | '/technician/bulk-import'
-    | '/technician/dashboard'
-    | '/technician/deploy'
-    | '/technician/disposal'
-    | '/technician/disposed'
-    | '/technician/handover-staff'
-    | '/technician/history'
-    | '/technician/laptop'
-    | '/technician/network'
-    | '/technician/pm-form'
-    | '/technician/pre-disposed'
-    | '/technician/preventive-maintenance'
-    | '/technician/report'
-    | '/technician/request-assets'
-    | '/technician/request-log'
-    | '/technician/request-view'
-    | '/technician/requests'
-    | '/technician/return'
+    | '/admind/dashboard'
+    | '/admind/disposal'
+    | '/admind/disposal-form'
+    | '/admind/history'
+    | '/itd/add-asset'
+    | '/itd/av'
+    | '/itd/bulk-import'
+    | '/itd/dashboard'
+    | '/itd/deploy'
+    | '/itd/disposal'
+    | '/itd/disposed'
+    | '/itd/handover-staff'
+    | '/itd/history'
+    | '/itd/laptop'
+    | '/itd/network'
+    | '/itd/pm-form'
+    | '/itd/pre-disposed'
+    | '/itd/preventive-maintenance'
+    | '/itd/report'
+    | '/itd/request-assets'
+    | '/itd/request-log'
+    | '/itd/request-view'
+    | '/itd/requests'
+    | '/itd/return'
     | '/user/edit-profile'
     | '/user/history'
     | '/user/request'
@@ -533,7 +531,7 @@ export interface FileRouteTypes {
     | '/admin/asset/$kind/$assetId'
     | '/api/auth/microsoft/callback'
     | '/api/auth/session/ping'
-    | '/technician/asset/$kind/$assetId'
+    | '/itd/asset/$kind/$assetId'
     | '/upload/dispose/$year/$batch/$fileName'
     | '/upload/picture/$kind/$assetId/$fileName'
     | '/upload/$year/dispose/picture/$assetId/$fileName'
@@ -550,30 +548,30 @@ export interface FileRouteTypes {
     | '/admin/request'
     | '/admin/settings'
     | '/admin/users'
-    | '/disposal-unit/dashboard'
-    | '/disposal-unit/disposal'
-    | '/disposal-unit/disposal-form'
-    | '/disposal-unit/history'
-    | '/technician/add-asset'
-    | '/technician/av'
-    | '/technician/bulk-import'
-    | '/technician/dashboard'
-    | '/technician/deploy'
-    | '/technician/disposal'
-    | '/technician/disposed'
-    | '/technician/handover-staff'
-    | '/technician/history'
-    | '/technician/laptop'
-    | '/technician/network'
-    | '/technician/pm-form'
-    | '/technician/pre-disposed'
-    | '/technician/preventive-maintenance'
-    | '/technician/report'
-    | '/technician/request-assets'
-    | '/technician/request-log'
-    | '/technician/request-view'
-    | '/technician/requests'
-    | '/technician/return'
+    | '/admind/dashboard'
+    | '/admind/disposal'
+    | '/admind/disposal-form'
+    | '/admind/history'
+    | '/itd/add-asset'
+    | '/itd/av'
+    | '/itd/bulk-import'
+    | '/itd/dashboard'
+    | '/itd/deploy'
+    | '/itd/disposal'
+    | '/itd/disposed'
+    | '/itd/handover-staff'
+    | '/itd/history'
+    | '/itd/laptop'
+    | '/itd/network'
+    | '/itd/pm-form'
+    | '/itd/pre-disposed'
+    | '/itd/preventive-maintenance'
+    | '/itd/report'
+    | '/itd/request-assets'
+    | '/itd/request-log'
+    | '/itd/request-view'
+    | '/itd/requests'
+    | '/itd/return'
     | '/user/edit-profile'
     | '/user/history'
     | '/user/request'
@@ -581,7 +579,7 @@ export interface FileRouteTypes {
     | '/admin/asset/$kind/$assetId'
     | '/api/auth/microsoft/callback'
     | '/api/auth/session/ping'
-    | '/technician/asset/$kind/$assetId'
+    | '/itd/asset/$kind/$assetId'
     | '/upload/dispose/$year/$batch/$fileName'
     | '/upload/picture/$kind/$assetId/$fileName'
     | '/upload/$year/dispose/picture/$assetId/$fileName'
@@ -599,30 +597,30 @@ export interface RootRouteChildren {
   AdminRequestRoute: typeof AdminRequestRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminUsersRoute: typeof AdminUsersRoute
-  DisposalUnitDashboardRoute: typeof DisposalUnitDashboardRoute
-  DisposalUnitDisposalRoute: typeof DisposalUnitDisposalRoute
-  DisposalUnitDisposalFormRoute: typeof DisposalUnitDisposalFormRoute
-  DisposalUnitHistoryRoute: typeof DisposalUnitHistoryRoute
-  TechnicianAddAssetRoute: typeof TechnicianAddAssetRoute
-  TechnicianAvRoute: typeof TechnicianAvRoute
-  TechnicianBulkImportRoute: typeof TechnicianBulkImportRoute
-  TechnicianDashboardRoute: typeof TechnicianDashboardRoute
-  TechnicianDeployRoute: typeof TechnicianDeployRoute
-  TechnicianDisposalRoute: typeof TechnicianDisposalRoute
-  TechnicianDisposedRoute: typeof TechnicianDisposedRoute
-  TechnicianHandoverStaffRoute: typeof TechnicianHandoverStaffRoute
-  TechnicianHistoryRoute: typeof TechnicianHistoryRoute
-  TechnicianLaptopRoute: typeof TechnicianLaptopRoute
-  TechnicianNetworkRoute: typeof TechnicianNetworkRoute
-  TechnicianPmFormRoute: typeof TechnicianPmFormRoute
-  TechnicianPreDisposedRoute: typeof TechnicianPreDisposedRoute
-  TechnicianPreventiveMaintenanceRoute: typeof TechnicianPreventiveMaintenanceRoute
-  TechnicianReportRoute: typeof TechnicianReportRoute
-  TechnicianRequestAssetsRoute: typeof TechnicianRequestAssetsRoute
-  TechnicianRequestLogRoute: typeof TechnicianRequestLogRoute
-  TechnicianRequestViewRoute: typeof TechnicianRequestViewRoute
-  TechnicianRequestsRoute: typeof TechnicianRequestsRoute
-  TechnicianReturnRoute: typeof TechnicianReturnRoute
+  AdmindDashboardRoute: typeof AdmindDashboardRoute
+  AdmindDisposalRoute: typeof AdmindDisposalRoute
+  AdmindDisposalFormRoute: typeof AdmindDisposalFormRoute
+  AdmindHistoryRoute: typeof AdmindHistoryRoute
+  ItdAddAssetRoute: typeof ItdAddAssetRoute
+  ItdAvRoute: typeof ItdAvRoute
+  ItdBulkImportRoute: typeof ItdBulkImportRoute
+  ItdDashboardRoute: typeof ItdDashboardRoute
+  ItdDeployRoute: typeof ItdDeployRoute
+  ItdDisposalRoute: typeof ItdDisposalRoute
+  ItdDisposedRoute: typeof ItdDisposedRoute
+  ItdHandoverStaffRoute: typeof ItdHandoverStaffRoute
+  ItdHistoryRoute: typeof ItdHistoryRoute
+  ItdLaptopRoute: typeof ItdLaptopRoute
+  ItdNetworkRoute: typeof ItdNetworkRoute
+  ItdPmFormRoute: typeof ItdPmFormRoute
+  ItdPreDisposedRoute: typeof ItdPreDisposedRoute
+  ItdPreventiveMaintenanceRoute: typeof ItdPreventiveMaintenanceRoute
+  ItdReportRoute: typeof ItdReportRoute
+  ItdRequestAssetsRoute: typeof ItdRequestAssetsRoute
+  ItdRequestLogRoute: typeof ItdRequestLogRoute
+  ItdRequestViewRoute: typeof ItdRequestViewRoute
+  ItdRequestsRoute: typeof ItdRequestsRoute
+  ItdReturnRoute: typeof ItdReturnRoute
   UserEditProfileRoute: typeof UserEditProfileRoute
   UserHistoryRoute: typeof UserHistoryRoute
   UserRequestRoute: typeof UserRequestRoute
@@ -630,7 +628,7 @@ export interface RootRouteChildren {
   AdminAssetKindAssetIdRoute: typeof AdminAssetKindAssetIdRoute
   ApiAuthMicrosoftCallbackRoute: typeof ApiAuthMicrosoftCallbackRoute
   ApiAuthSessionPingRoute: typeof ApiAuthSessionPingRoute
-  TechnicianAssetKindAssetIdRoute: typeof TechnicianAssetKindAssetIdRoute
+  ItdAssetKindAssetIdRoute: typeof ItdAssetKindAssetIdRoute
   UploadDisposeYearBatchFileNameRoute: typeof UploadDisposeYearBatchFileNameRoute
   UploadPictureKindAssetIdFileNameRoute: typeof UploadPictureKindAssetIdFileNameRoute
   UploadYearDisposePictureAssetIdFileNameRoute: typeof UploadYearDisposePictureAssetIdFileNameRoute
@@ -715,172 +713,172 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/disposal-unit/dashboard': {
-      id: '/disposal-unit/dashboard'
-      path: '/disposal-unit/dashboard'
-      fullPath: '/disposal-unit/dashboard'
-      preLoaderRoute: typeof DisposalUnitDashboardRouteImport
+    '/admind/dashboard': {
+      id: '/admind/dashboard'
+      path: '/admind/dashboard'
+      fullPath: '/admind/dashboard'
+      preLoaderRoute: typeof AdmindDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/disposal-unit/disposal': {
-      id: '/disposal-unit/disposal'
-      path: '/disposal-unit/disposal'
-      fullPath: '/disposal-unit/disposal'
-      preLoaderRoute: typeof DisposalUnitDisposalRouteImport
+    '/admind/disposal': {
+      id: '/admind/disposal'
+      path: '/admind/disposal'
+      fullPath: '/admind/disposal'
+      preLoaderRoute: typeof AdmindDisposalRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/disposal-unit/disposal-form': {
-      id: '/disposal-unit/disposal-form'
-      path: '/disposal-unit/disposal-form'
-      fullPath: '/disposal-unit/disposal-form'
-      preLoaderRoute: typeof DisposalUnitDisposalFormRouteImport
+    '/admind/disposal-form': {
+      id: '/admind/disposal-form'
+      path: '/admind/disposal-form'
+      fullPath: '/admind/disposal-form'
+      preLoaderRoute: typeof AdmindDisposalFormRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/disposal-unit/history': {
-      id: '/disposal-unit/history'
-      path: '/disposal-unit/history'
-      fullPath: '/disposal-unit/history'
-      preLoaderRoute: typeof DisposalUnitHistoryRouteImport
+    '/admind/history': {
+      id: '/admind/history'
+      path: '/admind/history'
+      fullPath: '/admind/history'
+      preLoaderRoute: typeof AdmindHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/add-asset': {
-      id: '/technician/add-asset'
-      path: '/technician/add-asset'
-      fullPath: '/technician/add-asset'
-      preLoaderRoute: typeof TechnicianAddAssetRouteImport
+    '/itd/add-asset': {
+      id: '/itd/add-asset'
+      path: '/itd/add-asset'
+      fullPath: '/itd/add-asset'
+      preLoaderRoute: typeof ItdAddAssetRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/av': {
-      id: '/technician/av'
-      path: '/technician/av'
-      fullPath: '/technician/av'
-      preLoaderRoute: typeof TechnicianAvRouteImport
+    '/itd/av': {
+      id: '/itd/av'
+      path: '/itd/av'
+      fullPath: '/itd/av'
+      preLoaderRoute: typeof ItdAvRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/bulk-import': {
-      id: '/technician/bulk-import'
-      path: '/technician/bulk-import'
-      fullPath: '/technician/bulk-import'
-      preLoaderRoute: typeof TechnicianBulkImportRouteImport
+    '/itd/bulk-import': {
+      id: '/itd/bulk-import'
+      path: '/itd/bulk-import'
+      fullPath: '/itd/bulk-import'
+      preLoaderRoute: typeof ItdBulkImportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/dashboard': {
-      id: '/technician/dashboard'
-      path: '/technician/dashboard'
-      fullPath: '/technician/dashboard'
-      preLoaderRoute: typeof TechnicianDashboardRouteImport
+    '/itd/dashboard': {
+      id: '/itd/dashboard'
+      path: '/itd/dashboard'
+      fullPath: '/itd/dashboard'
+      preLoaderRoute: typeof ItdDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/deploy': {
-      id: '/technician/deploy'
-      path: '/technician/deploy'
-      fullPath: '/technician/deploy'
-      preLoaderRoute: typeof TechnicianDeployRouteImport
+    '/itd/deploy': {
+      id: '/itd/deploy'
+      path: '/itd/deploy'
+      fullPath: '/itd/deploy'
+      preLoaderRoute: typeof ItdDeployRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/disposal': {
-      id: '/technician/disposal'
-      path: '/technician/disposal'
-      fullPath: '/technician/disposal'
-      preLoaderRoute: typeof TechnicianDisposalRouteImport
+    '/itd/disposal': {
+      id: '/itd/disposal'
+      path: '/itd/disposal'
+      fullPath: '/itd/disposal'
+      preLoaderRoute: typeof ItdDisposalRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/disposed': {
-      id: '/technician/disposed'
-      path: '/technician/disposed'
-      fullPath: '/technician/disposed'
-      preLoaderRoute: typeof TechnicianDisposedRouteImport
+    '/itd/disposed': {
+      id: '/itd/disposed'
+      path: '/itd/disposed'
+      fullPath: '/itd/disposed'
+      preLoaderRoute: typeof ItdDisposedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/handover-staff': {
-      id: '/technician/handover-staff'
-      path: '/technician/handover-staff'
-      fullPath: '/technician/handover-staff'
-      preLoaderRoute: typeof TechnicianHandoverStaffRouteImport
+    '/itd/handover-staff': {
+      id: '/itd/handover-staff'
+      path: '/itd/handover-staff'
+      fullPath: '/itd/handover-staff'
+      preLoaderRoute: typeof ItdHandoverStaffRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/history': {
-      id: '/technician/history'
-      path: '/technician/history'
-      fullPath: '/technician/history'
-      preLoaderRoute: typeof TechnicianHistoryRouteImport
+    '/itd/history': {
+      id: '/itd/history'
+      path: '/itd/history'
+      fullPath: '/itd/history'
+      preLoaderRoute: typeof ItdHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/laptop': {
-      id: '/technician/laptop'
-      path: '/technician/laptop'
-      fullPath: '/technician/laptop'
-      preLoaderRoute: typeof TechnicianLaptopRouteImport
+    '/itd/laptop': {
+      id: '/itd/laptop'
+      path: '/itd/laptop'
+      fullPath: '/itd/laptop'
+      preLoaderRoute: typeof ItdLaptopRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/network': {
-      id: '/technician/network'
-      path: '/technician/network'
-      fullPath: '/technician/network'
-      preLoaderRoute: typeof TechnicianNetworkRouteImport
+    '/itd/network': {
+      id: '/itd/network'
+      path: '/itd/network'
+      fullPath: '/itd/network'
+      preLoaderRoute: typeof ItdNetworkRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/pm-form': {
-      id: '/technician/pm-form'
-      path: '/technician/pm-form'
-      fullPath: '/technician/pm-form'
-      preLoaderRoute: typeof TechnicianPmFormRouteImport
+    '/itd/pm-form': {
+      id: '/itd/pm-form'
+      path: '/itd/pm-form'
+      fullPath: '/itd/pm-form'
+      preLoaderRoute: typeof ItdPmFormRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/pre-disposed': {
-      id: '/technician/pre-disposed'
-      path: '/technician/pre-disposed'
-      fullPath: '/technician/pre-disposed'
-      preLoaderRoute: typeof TechnicianPreDisposedRouteImport
+    '/itd/pre-disposed': {
+      id: '/itd/pre-disposed'
+      path: '/itd/pre-disposed'
+      fullPath: '/itd/pre-disposed'
+      preLoaderRoute: typeof ItdPreDisposedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/preventive-maintenance': {
-      id: '/technician/preventive-maintenance'
-      path: '/technician/preventive-maintenance'
-      fullPath: '/technician/preventive-maintenance'
-      preLoaderRoute: typeof TechnicianPreventiveMaintenanceRouteImport
+    '/itd/preventive-maintenance': {
+      id: '/itd/preventive-maintenance'
+      path: '/itd/preventive-maintenance'
+      fullPath: '/itd/preventive-maintenance'
+      preLoaderRoute: typeof ItdPreventiveMaintenanceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/report': {
-      id: '/technician/report'
-      path: '/technician/report'
-      fullPath: '/technician/report'
-      preLoaderRoute: typeof TechnicianReportRouteImport
+    '/itd/report': {
+      id: '/itd/report'
+      path: '/itd/report'
+      fullPath: '/itd/report'
+      preLoaderRoute: typeof ItdReportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/request-assets': {
-      id: '/technician/request-assets'
-      path: '/technician/request-assets'
-      fullPath: '/technician/request-assets'
-      preLoaderRoute: typeof TechnicianRequestAssetsRouteImport
+    '/itd/request-assets': {
+      id: '/itd/request-assets'
+      path: '/itd/request-assets'
+      fullPath: '/itd/request-assets'
+      preLoaderRoute: typeof ItdRequestAssetsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/request-log': {
-      id: '/technician/request-log'
-      path: '/technician/request-log'
-      fullPath: '/technician/request-log'
-      preLoaderRoute: typeof TechnicianRequestLogRouteImport
+    '/itd/request-log': {
+      id: '/itd/request-log'
+      path: '/itd/request-log'
+      fullPath: '/itd/request-log'
+      preLoaderRoute: typeof ItdRequestLogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/request-view': {
-      id: '/technician/request-view'
-      path: '/technician/request-view'
-      fullPath: '/technician/request-view'
-      preLoaderRoute: typeof TechnicianRequestViewRouteImport
+    '/itd/request-view': {
+      id: '/itd/request-view'
+      path: '/itd/request-view'
+      fullPath: '/itd/request-view'
+      preLoaderRoute: typeof ItdRequestViewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/requests': {
-      id: '/technician/requests'
-      path: '/technician/requests'
-      fullPath: '/technician/requests'
-      preLoaderRoute: typeof TechnicianRequestsRouteImport
+    '/itd/requests': {
+      id: '/itd/requests'
+      path: '/itd/requests'
+      fullPath: '/itd/requests'
+      preLoaderRoute: typeof ItdRequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/return': {
-      id: '/technician/return'
-      path: '/technician/return'
-      fullPath: '/technician/return'
-      preLoaderRoute: typeof TechnicianReturnRouteImport
+    '/itd/return': {
+      id: '/itd/return'
+      path: '/itd/return'
+      fullPath: '/itd/return'
+      preLoaderRoute: typeof ItdReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/user/edit-profile': {
@@ -932,11 +930,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSessionPingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/technician/asset/$kind/$assetId': {
-      id: '/technician/asset/$kind/$assetId'
-      path: '/technician/asset/$kind/$assetId'
-      fullPath: '/technician/asset/$kind/$assetId'
-      preLoaderRoute: typeof TechnicianAssetKindAssetIdRouteImport
+    '/itd/asset/$kind/$assetId': {
+      id: '/itd/asset/$kind/$assetId'
+      path: '/itd/asset/$kind/$assetId'
+      fullPath: '/itd/asset/$kind/$assetId'
+      preLoaderRoute: typeof ItdAssetKindAssetIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/upload/dispose/$year/$batch/$fileName': {
@@ -975,30 +973,30 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRequestRoute: AdminRequestRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminUsersRoute: AdminUsersRoute,
-  DisposalUnitDashboardRoute: DisposalUnitDashboardRoute,
-  DisposalUnitDisposalRoute: DisposalUnitDisposalRoute,
-  DisposalUnitDisposalFormRoute: DisposalUnitDisposalFormRoute,
-  DisposalUnitHistoryRoute: DisposalUnitHistoryRoute,
-  TechnicianAddAssetRoute: TechnicianAddAssetRoute,
-  TechnicianAvRoute: TechnicianAvRoute,
-  TechnicianBulkImportRoute: TechnicianBulkImportRoute,
-  TechnicianDashboardRoute: TechnicianDashboardRoute,
-  TechnicianDeployRoute: TechnicianDeployRoute,
-  TechnicianDisposalRoute: TechnicianDisposalRoute,
-  TechnicianDisposedRoute: TechnicianDisposedRoute,
-  TechnicianHandoverStaffRoute: TechnicianHandoverStaffRoute,
-  TechnicianHistoryRoute: TechnicianHistoryRoute,
-  TechnicianLaptopRoute: TechnicianLaptopRoute,
-  TechnicianNetworkRoute: TechnicianNetworkRoute,
-  TechnicianPmFormRoute: TechnicianPmFormRoute,
-  TechnicianPreDisposedRoute: TechnicianPreDisposedRoute,
-  TechnicianPreventiveMaintenanceRoute: TechnicianPreventiveMaintenanceRoute,
-  TechnicianReportRoute: TechnicianReportRoute,
-  TechnicianRequestAssetsRoute: TechnicianRequestAssetsRoute,
-  TechnicianRequestLogRoute: TechnicianRequestLogRoute,
-  TechnicianRequestViewRoute: TechnicianRequestViewRoute,
-  TechnicianRequestsRoute: TechnicianRequestsRoute,
-  TechnicianReturnRoute: TechnicianReturnRoute,
+  AdmindDashboardRoute: AdmindDashboardRoute,
+  AdmindDisposalRoute: AdmindDisposalRoute,
+  AdmindDisposalFormRoute: AdmindDisposalFormRoute,
+  AdmindHistoryRoute: AdmindHistoryRoute,
+  ItdAddAssetRoute: ItdAddAssetRoute,
+  ItdAvRoute: ItdAvRoute,
+  ItdBulkImportRoute: ItdBulkImportRoute,
+  ItdDashboardRoute: ItdDashboardRoute,
+  ItdDeployRoute: ItdDeployRoute,
+  ItdDisposalRoute: ItdDisposalRoute,
+  ItdDisposedRoute: ItdDisposedRoute,
+  ItdHandoverStaffRoute: ItdHandoverStaffRoute,
+  ItdHistoryRoute: ItdHistoryRoute,
+  ItdLaptopRoute: ItdLaptopRoute,
+  ItdNetworkRoute: ItdNetworkRoute,
+  ItdPmFormRoute: ItdPmFormRoute,
+  ItdPreDisposedRoute: ItdPreDisposedRoute,
+  ItdPreventiveMaintenanceRoute: ItdPreventiveMaintenanceRoute,
+  ItdReportRoute: ItdReportRoute,
+  ItdRequestAssetsRoute: ItdRequestAssetsRoute,
+  ItdRequestLogRoute: ItdRequestLogRoute,
+  ItdRequestViewRoute: ItdRequestViewRoute,
+  ItdRequestsRoute: ItdRequestsRoute,
+  ItdReturnRoute: ItdReturnRoute,
   UserEditProfileRoute: UserEditProfileRoute,
   UserHistoryRoute: UserHistoryRoute,
   UserRequestRoute: UserRequestRoute,
@@ -1006,7 +1004,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAssetKindAssetIdRoute: AdminAssetKindAssetIdRoute,
   ApiAuthMicrosoftCallbackRoute: ApiAuthMicrosoftCallbackRoute,
   ApiAuthSessionPingRoute: ApiAuthSessionPingRoute,
-  TechnicianAssetKindAssetIdRoute: TechnicianAssetKindAssetIdRoute,
+  ItdAssetKindAssetIdRoute: ItdAssetKindAssetIdRoute,
   UploadDisposeYearBatchFileNameRoute: UploadDisposeYearBatchFileNameRoute,
   UploadPictureKindAssetIdFileNameRoute: UploadPictureKindAssetIdFileNameRoute,
   UploadYearDisposePictureAssetIdFileNameRoute:

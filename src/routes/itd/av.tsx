@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianAvPage } from '@/technician/av';
+import { TechnicianAvPage } from '@/itd/av';
 
-export const Route = createFileRoute('/technician/av')({
+export const Route = createFileRoute('/itd/av')({
   head: () => ({
     meta: [
       { title: 'AV equipment | NIMS' },

@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianDisposedPage } from '@/technician/disposed';
+import { TechnicianDisposedPage } from '@/itd/disposed';
 
-export const Route = createFileRoute('/technician/disposed')({
+export const Route = createFileRoute('/itd/disposed')({
   head: () => ({
     meta: [
       { title: 'Disposed assets | NIMS' },

@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianDeployPage } from '@/technician/deployPage';
+import { TechnicianDeployPage } from '@/itd/deployPage';
 import { parseAssetIdParam, parseAssetKindParam, type AssetId, type AssetKind } from '@shared/lib/inventory-schema';
 
 type DeploySearch = { kind?: AssetKind; assetId?: AssetId };
 
-export const Route = createFileRoute('/technician/deploy')({
+export const Route = createFileRoute('/itd/deploy')({
   validateSearch: (search: Record<string, unknown>): DeploySearch => {
     const kind = parseAssetKindParam(search.kind) ?? undefined;
     const assetId = parseAssetIdParam(search.assetId) ?? undefined;

@@ -21,7 +21,7 @@ import type {
   BulkNetworkImportRow,
   LaptopRegistrar,
 } from '@backend/server/assets/assets-repo.server';
-import { isDisposalUnitRole } from '@shared/lib/auth-session';
+import { isDisposalUnitUser } from '@shared/lib/auth-session';
 import { adminMiddleware, disposalUnitMiddleware, staffMiddleware } from '@backend/server/core/auth-middleware';
 
 function laptopRegistrar(session: { staffId?: string; fullName?: string } | null): LaptopRegistrar {
@@ -228,8 +228,8 @@ export const getDisposalReportFn = createServerFn({ method: 'GET' })
   .middleware([disposalUnitMiddleware])
   .inputValidator((noRujukanPelupusan: string) => noRujukanPelupusan)
   .handler(async ({ data: noRujukanPelupusan, context }) => {
-    if (!isDisposalUnitRole(context.roleId)) {
-      throw new Error('Disposal unit access is required. Sign in with a disposal unit account to continue.');
+    if (!isDisposalUnitUser(context.roleId, context.departmentId)) {
+      throw new Error('Disposal unit access is required. Sign in with a technician account in the disposal unit department to continue.');
     }
     const { getDisposalReport } = await import('@backend/server/assets/disposal-repo.server');
     return getDisposalReport(noRujukanPelupusan);

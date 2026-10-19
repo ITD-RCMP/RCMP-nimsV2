@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { DisposalUnitDisposalFormPage } from '@/disposal-unit/disposal-form';
+import { DisposalUnitDisposalFormPage } from '@/admind/disposal-form';
 
-export const Route = createFileRoute('/disposal-unit/disposal-form')({
+export const Route = createFileRoute('/admind/disposal-form')({
   validateSearch: (search: Record<string, unknown>): { assets: string } => ({
     assets: typeof search.assets === 'string' ? search.assets : '',
   }),

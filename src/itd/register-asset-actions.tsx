@@ -24,7 +24,7 @@ import {
   isPlaceFilterActive,
   uniquePlaceOptions,
   type AssetPlaceFilter,
-} from '@/technician/asset-place-column';
+} from '@/itd/asset-place-column';
 
 type RegisterAssetActionsProps = {
   kind: AssetKind;
@@ -184,12 +184,12 @@ export function RegisterAssetActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link to="/technician/add-asset" search={{ kind }}>
+            <Link to="/itd/add-asset" search={{ kind }}>
               Single asset
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/technician/bulk-import" search={{ kind }}>
+            <Link to="/itd/bulk-import" search={{ kind }}>
               Import bulk
             </Link>
           </DropdownMenuItem>

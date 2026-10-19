@@ -4,7 +4,7 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Toaster } from '@/components/ui/sonner';
-import { DisposalUnitSideBar } from '@/disposal-unit/side-bar';
+import { DisposalUnitSideBar } from '@/admind/side-bar';
 import {
   clearAllSessions,
   getPostLoginPath,
@@ -19,7 +19,7 @@ export function DisposalUnitShell({ children }: { children: ReactNode }) {
     if (typeof window === 'undefined') return;
     const user = readPrivilegedSession();
     if (user && !hasDisposalUnitSession()) {
-      void navigate({ to: getPostLoginPath(user.roleId) });
+      void navigate({ to: getPostLoginPath(user.roleId, user.departmentId) });
       return;
     }
     if (!hasDisposalUnitSession()) {

@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { REQUEST_STATUS_ACTIVE } from '@shared/lib/request-schema';
 import type { RequestAssignableKind, RequestPoolAsset } from '@shared/lib/request-schema';
-import { AssetStatusBadge } from '@/technician/asset-status-badge';
-import { TechnicianShell } from '@/technician/technician-shell';
-import { RequestToolbarActions } from '@/technician/request-toolbar-actions';
+import { AssetStatusBadge } from '@/itd/asset-status-badge';
+import { TechnicianShell } from '@/itd/technician-shell';
+import { RequestToolbarActions } from '@/itd/request-toolbar-actions';
 import { listRequestPoolAssetsFn, removeAssetFromRequestPoolFn } from '@backend/server/requests/request.functions';
 import { cn } from '@/lib/utils';
 

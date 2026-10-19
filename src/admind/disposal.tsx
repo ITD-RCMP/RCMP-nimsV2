@@ -23,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DisposalUnitShell } from '@/disposal-unit/disposal-unit-shell';
+import { DisposalUnitShell } from '@/admind/disposal-unit-shell';
 import { isoToLocalDate } from '@shared/lib/date-format';
 import {
   ACC_CODE_OPTIONS,
@@ -39,7 +39,7 @@ import {
 } from '@shared/lib/disposal-schema';
 import { cn } from '@/lib/utils';
 import { usePagination } from '@/hooks/use-pagination';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
 import { listDisposalQueueAssetsFn } from '@backend/server/assets/assets.functions';
 
 type KindFilter = 'all' | AssetKind;
@@ -171,7 +171,7 @@ export function DisposalUnitDisposalPage() {
       return;
     }
     void navigate({
-      to: '/disposal-unit/disposal-form',
+      to: '/admind/disposal-form',
       search: { assets: serializeDisposalBatchAssets(selectedRows) },
     });
   };

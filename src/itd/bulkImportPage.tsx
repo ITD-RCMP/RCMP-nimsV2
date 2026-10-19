@@ -29,7 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { TechnicianShell } from '@/itd/technician-shell';
 import { IMPORT_DATE_FORMAT_HINT, PURCHASE_DATE_COLUMNS } from '@shared/lib/date-format';
 import { INVENTORY_STATUSES, formatStatusLabel } from '@shared/lib/inventory-schema';
 import { ASSET_KIND_LABEL, ASSET_LIST_PATH, type AssetKind } from '@/hooks/assets';
@@ -199,7 +199,7 @@ export function TechnicianBulkImportPage() {
         kind={kind}
         onBack={() => {
           setSelectedKind(null);
-          void navigate({ to: '/technician/bulk-import', search: {} });
+          void navigate({ to: '/itd/bulk-import', search: {} });
         }}
         onImported={(importedKind, count) => {
           toast.success(`Imported ${count} ${ASSET_KIND_LABEL[importedKind].toLowerCase()} record(s)`);

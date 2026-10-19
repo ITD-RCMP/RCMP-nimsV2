@@ -17,9 +17,9 @@ import {
   avRequestCategoryChoices,
 } from '@shared/lib/request-asset-types';
 import { isKnownLaptopCategory, LAPTOP_CATEGORY_OPTIONS } from '@/hooks/assetid-generator';
-import { AssetStatusBadge } from '@/technician/asset-status-badge';
-import { TechnicianShell } from '@/technician/technician-shell';
-import { RequestToolbarActions } from '@/technician/request-toolbar-actions';
+import { AssetStatusBadge } from '@/itd/asset-status-badge';
+import { TechnicianShell } from '@/itd/technician-shell';
+import { RequestToolbarActions } from '@/itd/request-toolbar-actions';
 import {
   listActiveForRequestPoolFn,
   markAssetsForRequestFn,

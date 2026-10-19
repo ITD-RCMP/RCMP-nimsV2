@@ -20,13 +20,13 @@ export function TechnicianDisposalViewMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuItem asChild>
-          <Link to="/technician/pre-disposed">
+          <Link to="/itd/pre-disposed">
             <List className="h-4 w-4" />
             Queue Pre-Dispose
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/technician/disposed">
+          <Link to="/itd/disposed">
             <Recycle className="h-4 w-4" />
             Disposed Asset
           </Link>

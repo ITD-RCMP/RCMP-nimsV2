@@ -3,7 +3,7 @@ export const SESSION_REVOKED_CODE = 'SESSION_REVOKED';
 export const SESSION_ACTIVITY_THROTTLE_MS = 60_000;
 export const SESSION_WARNING_LEAD_MS = 2 * 60 * 1000;
 
-const PROTECTED_PREFIXES = ['/admin', '/technician', '/user', '/disposal-unit'] as const;
+const PROTECTED_PREFIXES = ['/admin', '/itd', '/user', '/admind'] as const;
 
 export type SessionTimeoutPolicy = {
   idleTimeoutMs: number;

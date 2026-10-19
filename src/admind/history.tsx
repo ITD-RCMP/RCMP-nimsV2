@@ -20,11 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DisposalUnitShell } from '@/disposal-unit/disposal-unit-shell';
+import { DisposalUnitShell } from '@/admind/disposal-unit-shell';
 import { isoToLocalDate, localDateToIso } from '@shared/lib/date-format';
 import { ASSET_KIND_LABEL } from '@shared/lib/inventory-schema';
 import type { DisposalHistoryBatch, DisposalReport } from '@shared/lib/disposal-schema';
-import { DatePickerField } from '@/technician/deploy-return-fields';
+import { DatePickerField } from '@/itd/deploy-return-fields';
 import { disposalPhotoPath } from '@shared/lib/disposal-photo';
 import {
   downloadDisposalBundle,

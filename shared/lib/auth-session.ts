@@ -2,6 +2,8 @@ export const ROLE_TECHNICIAN = 1;
 export const ROLE_ADMIN = 2;
 export const ROLE_USER = 3;
 export const ROLE_DISPOSAL_UNIT = 4;
+export const TECHNICIAN_DEPT_ID = 1;
+export const DISPOSAL_UNIT_DEPT_ID = 2;
 
 export const TECHNICIAN_SESSION_KEY = 'nims-technician-session';
 export const USER_SESSION_KEY = 'nims-user-session';
@@ -13,12 +15,22 @@ export type SessionUser = {
   roleId: number;
   roleName: string;
   phone: string | null;
+  departmentId: number | null;
 };
 
 export function isStaffRole(roleId: number): boolean {
   return roleId === ROLE_TECHNICIAN || roleId === ROLE_ADMIN;
 }
 
+export function isTechnicianUser(roleId: number, departmentId: number | null): boolean {
+  return roleId === ROLE_TECHNICIAN && departmentId === TECHNICIAN_DEPT_ID;
+}
+
+export function isDisposalUnitUser(roleId: number, departmentId: number | null): boolean {
+  return roleId === ROLE_TECHNICIAN && departmentId === DISPOSAL_UNIT_DEPT_ID;
+}
+
+/** @deprecated Use isDisposalUnitUser(roleId, departmentId) instead. */
 export function isDisposalUnitRole(roleId: number): boolean {
   return roleId === ROLE_DISPOSAL_UNIT;
 }
@@ -28,13 +40,13 @@ export function isAdminRole(roleId: number): boolean {
 }
 
 function isPrivilegedSessionRole(roleId: number): boolean {
-  return isStaffRole(roleId) || isDisposalUnitRole(roleId);
+  return isStaffRole(roleId);
 }
 
-export function getPostLoginPath(roleId: number): string {
+export function getPostLoginPath(roleId: number, departmentId?: number | null): string {
   if (isAdminRole(roleId)) return '/admin/dashboard';
-  if (isDisposalUnitRole(roleId)) return '/disposal-unit/dashboard';
-  if (roleId === ROLE_TECHNICIAN) return '/technician/dashboard';
+  if (isDisposalUnitUser(roleId, departmentId ?? null)) return '/admind/dashboard';
+  if (isTechnicianUser(roleId, departmentId ?? null)) return '/itd/dashboard';
   return '/user/request';
 }
 
@@ -73,12 +85,12 @@ export function readPrivilegedSession(): SessionUser | null {
 
 export function readTechnicianSession(): SessionUser | null {
   const user = readPrivilegedSession();
-  return user && isStaffRole(user.roleId) ? user : null;
+  return user && isTechnicianUser(user.roleId, user.departmentId) ? user : null;
 }
 
 export function readDisposalUnitSession(): SessionUser | null {
   const user = readPrivilegedSession();
-  return user && isDisposalUnitRole(user.roleId) ? user : null;
+  return user && isDisposalUnitUser(user.roleId, user.departmentId) ? user : null;
 }
 
 export function readUserSession(): SessionUser | null {

@@ -47,9 +47,9 @@ import {
   listPmLogsFn,
   updatePmLogAssetsFn,
 } from '@backend/server/operations/pm.functions';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
-import { DatePickerField } from '@/technician/deploy-return-fields';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
+import { DatePickerField } from '@/itd/deploy-return-fields';
+import { TechnicianShell } from '@/itd/technician-shell';
 
 const KIND_ICON: Record<AssetKind, typeof Laptop> = {
   laptop: Laptop,
@@ -579,7 +579,7 @@ export function PMpage() {
           </p>
         </div>
         <Button type="button" className="shrink-0 gap-1.5 rounded-[8px]" asChild>
-          <Link to="/technician/pm-form">
+          <Link to="/itd/pm-form">
             <Wrench className="h-4 w-4" />
             Run maintenance
           </Link>

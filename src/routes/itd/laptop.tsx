@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianLaptopPage } from '@/technician/laptop';
+import { TechnicianLaptopPage } from '@/itd/laptop';
 
-export const Route = createFileRoute('/technician/laptop')({
+export const Route = createFileRoute('/itd/laptop')({
   head: () => ({
     meta: [
       { title: 'Laptop & desktop | NIMS' },

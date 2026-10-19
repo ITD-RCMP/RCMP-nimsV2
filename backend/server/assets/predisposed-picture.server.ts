@@ -10,7 +10,7 @@ import type {
 } from '@shared/lib/disposal-schema';
 import { malaysiaTodayIso } from '@shared/lib/disposal-schema';
 import { getSessionUser, webSessionEndResponse } from '@backend/server/auth/session.server';
-import { isDisposalUnitRole, isStaffRole } from '@shared/lib/auth-session';
+import { isDisposalUnitUser, isStaffRole } from '@shared/lib/auth-session';
 
 const UPLOAD_ROOT = path.join(process.cwd(), 'upload');
 const YEAR_RE = /^\d{4}$/;
@@ -33,7 +33,7 @@ async function assertStaffSession() {
 
 async function assertCanViewPictures() {
   const session = await getSessionUser();
-  if (!session || (!isStaffRole(session.roleId) && !isDisposalUnitRole(session.roleId))) {
+  if (!session || (!isStaffRole(session.roleId) && !isDisposalUnitUser(session.roleId, session.departmentId ?? null))) {
     throw new Error('Technician access is required.');
   }
 }

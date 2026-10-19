@@ -24,9 +24,9 @@ import {
   queueHandoverEmailFn,
   sendHandoverEmailFn,
 } from '@backend/server/email/handover-email.functions';
-import { TechnicianShell } from '@/technician/technician-shell';
-import { DatePickerField, CampusBuildingSelect, FormField } from '@/technician/deploy-return-fields';
-import { StaffRecipientSearch } from '@/technician/staff-recipient-search';
+import { TechnicianShell } from '@/itd/technician-shell';
+import { DatePickerField, CampusBuildingSelect, FormField } from '@/itd/deploy-return-fields';
+import { StaffRecipientSearch } from '@/itd/staff-recipient-search';
 import { isLeasingCategory } from '@/hooks/assetid-generator';
 
 type LaptopDeployMode = 'staff' | 'place';
@@ -75,7 +75,7 @@ export function TechnicianDeployPage() {
       <TechnicianShell>
         <p className="text-sm text-destructive">Invalid deploy link. Open deploy from an asset listing.</p>
         <Button variant="outline" className="mt-4 rounded-[8px]" asChild>
-          <Link to="/technician/dashboard">Back to dashboard</Link>
+          <Link to="/itd/dashboard">Back to dashboard</Link>
         </Button>
       </TechnicianShell>
     );

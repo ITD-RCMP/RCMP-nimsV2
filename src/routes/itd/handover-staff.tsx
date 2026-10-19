@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianHandoverStaffPage } from '@/technician/handover-staff';
+import { TechnicianHandoverStaffPage } from '@/itd/handover-staff';
 
-export const Route = createFileRoute('/technician/handover-staff')({
+export const Route = createFileRoute('/itd/handover-staff')({
   head: () => ({
     meta: [
       { title: 'Handover staff | NIMS' },

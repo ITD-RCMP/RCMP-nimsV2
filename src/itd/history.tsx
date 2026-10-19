@@ -42,9 +42,9 @@ import { isoToLocalDate } from '@shared/lib/date-format';
 import { cn } from '@/lib/utils';
 import { usePagination } from '@/hooks/use-pagination';
 import { listActivityLogFn } from '@backend/server/operations/activity-log.functions';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
-import { DatePickerField } from '@/technician/deploy-return-fields';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
+import { DatePickerField } from '@/itd/deploy-return-fields';
+import { TechnicianShell } from '@/itd/technician-shell';
 
 type CategoryFilter = 'all' | ActivityLogCategory;
 type KindFilter = 'all' | AssetKind;
@@ -131,7 +131,7 @@ function ActivityRow({ entry }: { entry: ActivityLogEntry }) {
           <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
             {entry.assetKind != null && entry.assetId != null && (
               <Link
-                to="/technician/asset/$kind/$assetId"
+                to="/itd/asset/$kind/$assetId"
                 params={{ kind: entry.assetKind, assetId: String(entry.assetId) }}
                 className="text-[oklch(0.45_0.12_290)] hover:underline"
               >
@@ -140,7 +140,7 @@ function ActivityRow({ entry }: { entry: ActivityLogEntry }) {
             )}
             {entry.requestId != null && (
               <Link
-                to="/technician/request-log"
+                to="/itd/request-log"
                 className="text-[oklch(0.45_0.12_290)] hover:underline"
               >
                 Request #{entry.requestId}
@@ -249,7 +249,7 @@ export function TechnicianHistoryPage() {
             {filtered.length !== entries.length && ` of ${entries.length}`}
             {' · '}
             <Link
-              to="/technician/request-log"
+              to="/itd/request-log"
               className="text-[oklch(0.45_0.12_290)] hover:underline"
             >
               Request log

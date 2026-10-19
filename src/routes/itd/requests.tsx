@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianRequestPage } from '@/technician/requestPage';
+import { TechnicianRequestPage } from '@/itd/requestPage';
 
-export const Route = createFileRoute('/technician/requests')({
+export const Route = createFileRoute('/itd/requests')({
   head: () => ({
     meta: [
       { title: 'User requests | NIMS' },

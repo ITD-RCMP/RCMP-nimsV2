@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianBulkImportPage } from '@/technician/bulkImportPage';
+import { TechnicianBulkImportPage } from '@/itd/bulkImportPage';
 import type { AssetKind } from '@/hooks/assets';
 
 type BulkImportSearch = { kind?: AssetKind };
 
-export const Route = createFileRoute('/technician/bulk-import')({
+export const Route = createFileRoute('/itd/bulk-import')({
   validateSearch: (search: Record<string, unknown>): BulkImportSearch => {
     const k = search.kind;
     if (k === 'laptop' || k === 'av' || k === 'network') return { kind: k };

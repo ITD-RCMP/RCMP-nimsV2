@@ -15,7 +15,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     const user = readPrivilegedSession();
     if (!hasAdminSession()) {
       if (user) {
-        void navigate({ to: getPostLoginPath(user.roleId) });
+        void navigate({ to: getPostLoginPath(user.roleId, user.departmentId) });
       } else {
         void navigate({ to: '/login' });
       }

@@ -15,7 +15,7 @@ import {
   RequestTimetable,
   useDashboardMonthState,
 } from '@/dashboard/dashboard-widgets';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { TechnicianShell } from '@/itd/technician-shell';
 
 const EMPTY_ASSET_STATS: DashboardAssetKindStats = {
   store: 0,
@@ -71,25 +71,25 @@ export function TechnicianDashboardPage() {
           label={ASSET_KIND_LABEL.laptop}
           stats={stats?.laptop ?? EMPTY_ASSET_STATS}
           tone="lime"
-          href="/technician/laptop"
+          href="/itd/laptop"
         />
         <InventoryStatCard
           icon={Tv}
           label={ASSET_KIND_LABEL.av}
           stats={stats?.av ?? EMPTY_ASSET_STATS}
           tone="sky"
-          href="/technician/av"
+          href="/itd/av"
         />
         <InventoryStatCard
           icon={Network}
           label={ASSET_KIND_LABEL.network}
           stats={stats?.network ?? EMPTY_ASSET_STATS}
           tone="violet"
-          href="/technician/network"
+          href="/itd/network"
         />
         <DisposedStatCard
           stats={stats?.disposedYear ?? EMPTY_DISPOSED_YEAR}
-          href="/technician/disposed"
+          href="/itd/disposed"
         />
       </div>
 
@@ -103,7 +103,7 @@ export function TechnicianDashboardPage() {
           onPrevMonth={() => shiftMonth(-1)}
           onNextMonth={() => shiftMonth(1)}
           onThisMonth={() => goToThisMonth()}
-          requestHref="/technician/requests"
+          requestHref="/itd/requests"
         />
       </div>
       <br />

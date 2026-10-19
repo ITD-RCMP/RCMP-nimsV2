@@ -12,15 +12,15 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { TechnicianShell } from '@/technician/technician-shell';
-import { AssetStatusActions } from '@/technician/asset-status-actions';
-import { AssetStatusBadge } from '@/technician/asset-status-badge';
-import { RegisterAssetActions } from '@/technician/register-asset-actions';
+import { TechnicianShell } from '@/itd/technician-shell';
+import { AssetStatusActions } from '@/itd/asset-status-actions';
+import { AssetStatusBadge } from '@/itd/asset-status-badge';
+import { RegisterAssetActions } from '@/itd/register-asset-actions';
 import {
 	EMPTY_PLACE_FILTER,
 	matchesPlaceFilter,
 	type AssetPlaceFilter,
-} from '@/technician/asset-place-column';
+} from '@/itd/asset-place-column';
 import { filterBySearch, filterByStatus, useAssets } from '@/hooks/assets';
 import {
 	isDesktopCategory,
@@ -42,8 +42,8 @@ import {
 	LaptopAssetStockSummary,
 	type LaptopFormFactor,
 	type LaptopFormFactorFilter,
-} from '@/technician/laptop-stock-summary';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
+} from '@/itd/laptop-stock-summary';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
 
 type LaptopCategoryView = 'all' | (typeof LAPTOP_CATEGORY_OPTIONS)[number] | typeof LAPTOP_CATEGORY_OTHERS;
 
@@ -270,7 +270,7 @@ export function TechnicianLaptopPage() {
 					onPlaceFilterChange={setPlaceFilter}
 					leading={
 						<Button size="sm" variant="outline" asChild>
-							<Link to="/technician/handover-staff">
+							<Link to="/itd/handover-staff">
 								<Users className="h-4 w-4" />
 								<span className="hidden sm:inline">Handover Directory</span>
 							</Link>
@@ -353,14 +353,14 @@ export function TechnicianLaptopPage() {
 											className="cursor-pointer hover:bg-muted/50"
 											onClick={() =>
 												void navigate({
-													to: '/technician/asset/$kind/$assetId',
+													to: '/itd/asset/$kind/$assetId',
 													params: { kind: 'laptop', assetId: String(c.assetId) },
 												})
 											}
 										>
 											<TableCell>
 												<Link
-													to="/technician/asset/$kind/$assetId"
+													to="/itd/asset/$kind/$assetId"
 													params={{ kind: 'laptop', assetId: String(c.assetId) }}
 													className="text-primary underline-offset-2 hover:underline"
 													onClick={(e) => e.stopPropagation()}

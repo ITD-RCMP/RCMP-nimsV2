@@ -34,10 +34,10 @@ import type { StaffDirectoryRow, StaffDivision, StaffHandoverAsset } from '@shar
 import { STAFF_DIVISIONS } from '@shared/lib/staff-schema';
 import { missingStaffDirectoryFields } from '@shared/lib/deploy-return-schema';
 import { formatDateLabel } from '@shared/lib/date-format';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
-import { AssetStatusBadge } from '@/technician/asset-status-badge';
-import { FormField } from '@/technician/deploy-return-fields';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
+import { AssetStatusBadge } from '@/itd/asset-status-badge';
+import { FormField } from '@/itd/deploy-return-fields';
+import { TechnicianShell } from '@/itd/technician-shell';
 import { InsightStatCard } from '@/components/insight-stat-card';
 import { cn } from '@/lib/utils';
 import { createStaffFn, listStaffDirectoryFn, listStaffHandoverAssetsFn, updateStaffFn } from '@backend/server/operations/staff.functions';
@@ -485,7 +485,7 @@ export function TechnicianHandoverStaffPage() {
                         <TableRow key={asset.handoverId} className="hover:bg-muted/50">
                           <TableCell>
                             <Link
-                              to="/technician/asset/$kind/$assetId"
+                              to="/itd/asset/$kind/$assetId"
                               params={{ kind: 'laptop', assetId: String(asset.assetId) }}
                               className="inline-flex items-center gap-1.5 text-primary underline-offset-2 hover:underline"
                             >

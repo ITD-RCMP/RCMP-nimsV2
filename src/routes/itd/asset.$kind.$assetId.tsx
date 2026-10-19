@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianAssetViewPage } from '@/technician/asset-view';
+import { TechnicianAssetViewPage } from '@/itd/asset-view';
 import { parseAssetIdParam, parseAssetKindParam } from '@shared/lib/inventory-schema';
 
-export const Route = createFileRoute('/technician/asset/$kind/$assetId')({
+export const Route = createFileRoute('/itd/asset/$kind/$assetId')({
   params: {
     parse: (params) => {
       const kind = parseAssetKindParam(params.kind);

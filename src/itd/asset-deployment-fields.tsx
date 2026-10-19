@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import type { OpenReturnContext, StaffRecipient, UpdateOpenDeploymentInput } from '@shared/lib/deploy-return-schema';
 import { missingStaffDirectoryFields, staffDirectoryIncompleteMessage } from '@shared/lib/deploy-return-schema';
 import type { AssetId } from '@shared/lib/inventory-schema';
-import { CampusBuildingSelect, DatePickerField, FormField } from '@/technician/deploy-return-fields';
-import { StaffRecipientSearch } from '@/technician/staff-recipient-search';
+import { CampusBuildingSelect, DatePickerField, FormField } from '@/itd/deploy-return-fields';
+import { StaffRecipientSearch } from '@/itd/staff-recipient-search';
 
 export type DeploymentEditState = {
   recipient: StaffRecipient | null;

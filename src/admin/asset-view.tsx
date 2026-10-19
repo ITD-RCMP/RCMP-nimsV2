@@ -1,6 +1,6 @@
 import { AdminShell } from '@/admin/admin-shell';
 import type { AssetId, AssetKind } from '@shared/lib/inventory-schema';
-import { AssetViewContent } from '@/technician/asset-view';
+import { AssetViewContent } from '@/itd/asset-view';
 
 const ADMIN_ASSET_LIST_PATH: Record<AssetKind, string> = {
   laptop: '/admin/laptop',

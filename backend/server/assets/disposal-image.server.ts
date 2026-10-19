@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { isDisposalUnitRole } from '@shared/lib/auth-session';
+import { isDisposalUnitUser } from '@shared/lib/auth-session';
 import { getSessionUser, webSessionEndResponse } from '@backend/server/auth/session.server';
 
 const UPLOAD_ROOT = path.join(process.cwd(), 'upload', 'dispose');
@@ -10,7 +10,7 @@ const FILE_RE = /^(whole|serial)-[A-Za-z0-9._-]{1,64}\.(jpg|jpeg|png|webp)$/i;
 
 function assertDisposalUnitSession() {
   return getSessionUser().then((session) => {
-    if (!session || !isDisposalUnitRole(session.roleId)) {
+    if (!session || !isDisposalUnitUser(session.roleId, session.departmentId ?? null)) {
       throw new Error('Disposal unit access is required.');
     }
   });

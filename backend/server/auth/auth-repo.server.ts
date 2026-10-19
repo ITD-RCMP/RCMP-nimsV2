@@ -10,6 +10,7 @@ export type AuthUserRow = {
   roleId: number;
   roleName: string;
   phone: string | null;
+  departmentId: number | null;
 };
 
 export type StaffProfileRow = AuthUserRow & {
@@ -23,9 +24,10 @@ type UserRow = RowDataPacket & {
   role_id: number;
   phone: string | null;
   role_name: string;
+  department_id: number | null;
 };
 
-const USER_SELECT = `SELECT u.id, u.oid, u.email, u.role_id, u.phone, r.name AS role_name`;
+const USER_SELECT = `SELECT u.id, u.oid, u.email, u.role_id, u.phone, u.department_id, r.name AS role_name`;
 
 function mapUser(row: UserRow, profile: { fullName: string; email: string; phone: string | null }): AuthUserRow {
   return {
@@ -35,6 +37,7 @@ function mapUser(row: UserRow, profile: { fullName: string; email: string; phone
     roleId: row.role_id,
     roleName: row.role_name,
     phone: profile.phone,
+    departmentId: row.department_id ?? null,
   };
 }
 
@@ -188,7 +191,23 @@ async function devLoginAsRole(roleId: number): Promise<AuthUserRow> {
 }
 
 export async function devLoginAsTechnician(): Promise<AuthUserRow> {
-  return devLoginAsRole(ROLE_TECHNICIAN);
+  const pool = getDbPool();
+  const [rows] = await pool.query<UserRow[]>(
+    `${USER_SELECT}
+     FROM users u
+     INNER JOIN role r ON r.id = u.role_id
+     WHERE u.role_id = ? AND u.department_id = ?
+     ORDER BY u.id ASC
+     LIMIT 1`,
+    [ROLE_TECHNICIAN, 1],
+  );
+  const row = rows[0] ?? null;
+  if (!row) {
+    throw new Error(
+      'No technician account with department_id = 1 found in the database. Add a technician in department 1 before using dev sign-in as technician.',
+    );
+  }
+  return mapUserWithAzureProfile(row);
 }
 
 export async function devLoginAsAdmin(): Promise<AuthUserRow> {
@@ -200,7 +219,23 @@ export async function devLoginAsUser(): Promise<AuthUserRow> {
 }
 
 export async function devLoginAsDisposalUnit(): Promise<AuthUserRow> {
-  return devLoginAsRole(ROLE_DISPOSAL_UNIT);
+  const pool = getDbPool();
+  const [rows] = await pool.query<UserRow[]>(
+    `${USER_SELECT}
+     FROM users u
+     INNER JOIN role r ON r.id = u.role_id
+     WHERE u.role_id = ? AND u.department_id = ?
+     ORDER BY u.id ASC
+     LIMIT 1`,
+    [ROLE_TECHNICIAN, 2],
+  );
+  const row = rows[0] ?? null;
+  if (!row) {
+    throw new Error(
+      'No technician account with department_id = 2 found in the database. Add a technician in department 2 before using dev sign-in as disposal unit.',
+    );
+  }
+  return mapUserWithAzureProfile(row);
 }
 
 export type UpdateUserProfileInput = {

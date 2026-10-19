@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { TechSideBar } from '@/components/ui/techSideBar';
 import { Toaster } from '@/components/ui/sonner';
-import { clearAllSessions, hasTechnicianSession, isAdminRole, isDisposalUnitRole, readPrivilegedSession } from '@shared/lib/auth-session';
-import { AssetLookupButton } from '@/technician/asset-lookup';
+import { clearAllSessions, hasTechnicianSession, isAdminRole, isDisposalUnitUser, readPrivilegedSession } from '@shared/lib/auth-session';
+import { AssetLookupButton } from '@/itd/asset-lookup';
 
 export function TechnicianShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -14,8 +14,8 @@ export function TechnicianShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const user = readPrivilegedSession();
-    if (user && isDisposalUnitRole(user.roleId)) {
-      void navigate({ to: '/disposal-unit/dashboard' });
+    if (user && isDisposalUnitUser(user.roleId, user.departmentId)) {
+      void navigate({ to: '/admind/dashboard' });
       return;
     }
     if (user && isAdminRole(user.roleId)) {

@@ -82,8 +82,8 @@ import {
 import { formatDateLabel, isoToLocalDate, localDateToIso } from '@shared/lib/date-format';
 import { cn } from '@/lib/utils';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { AssetStatusBadge } from '@/technician/asset-status-badge';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { AssetStatusBadge } from '@/itd/asset-status-badge';
+import { TechnicianShell } from '@/itd/technician-shell';
 import { queueCheckoutEmailFn } from '@backend/server/email/checkout-email.functions';
 import { queueRequestRejectEmailFn } from '@backend/server/email/request-reject-email.functions';
 import { queueRequestReturnEmailFn } from '@backend/server/email/request-return-email.functions';
@@ -101,8 +101,8 @@ import {
   rejectUserRequestFn,
   returnUserRequestFn,
 } from '@backend/server/requests/request.functions';
-import { RequestReturnFields } from '@/technician/request-return-fields';
-import { RequestToolbarActions } from '@/technician/request-toolbar-actions';
+import { RequestReturnFields } from '@/itd/request-return-fields';
+import { RequestToolbarActions } from '@/itd/request-toolbar-actions';
 function outlookComposeHref(email: string): string {
   return `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(email)}`;
 }
@@ -1341,7 +1341,7 @@ export function TechnicianRequestPage() {
           {pool.length === 0 && (
             <p className="mt-3 flex items-center gap-2 text-xs text-amber-700">
               No assets available in the request pool.{' '}
-              <Link to="/technician/request-assets" className="underline">
+              <Link to="/itd/request-assets" className="underline">
                 Add assets first
               </Link>
             </p>

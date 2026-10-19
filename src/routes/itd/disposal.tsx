@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianDisposalPage } from '@/technician/disposal';
+import { TechnicianDisposalPage } from '@/itd/disposal';
 
-export const Route = createFileRoute('/technician/disposal')({
+export const Route = createFileRoute('/itd/disposal')({
   head: () => ({
     meta: [
       { title: 'Asset disposal | NIMS' },

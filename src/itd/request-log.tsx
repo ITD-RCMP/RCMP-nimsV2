@@ -23,10 +23,10 @@ import { usePagination } from '@/hooks/use-pagination';
 import { formatDateLabel, isoToLocalDate, localDateToIso } from '@shared/lib/date-format';
 import type { RequestLogAssignment, RequestLogEntry } from '@shared/lib/request-schema';
 import { cn } from '@/lib/utils';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
-import { DatePickerField } from '@/technician/deploy-return-fields';
-import { RequestToolbarActions } from '@/technician/request-toolbar-actions';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
+import { DatePickerField } from '@/itd/deploy-return-fields';
+import { RequestToolbarActions } from '@/itd/request-toolbar-actions';
+import { TechnicianShell } from '@/itd/technician-shell';
 import { listRequestLogFn } from '@backend/server/requests/request.functions';
 
 function hasBookedAsset(a: RequestLogAssignment): boolean {

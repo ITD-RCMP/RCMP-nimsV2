@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianPreDisposedPage } from '@/technician/pre-disposed';
+import { TechnicianPreDisposedPage } from '@/itd/pre-disposed';
 
-export const Route = createFileRoute('/technician/pre-disposed')({
+export const Route = createFileRoute('/itd/pre-disposed')({
   head: () => ({
     meta: [
       { title: 'Pre-disposed assets | NIMS' },

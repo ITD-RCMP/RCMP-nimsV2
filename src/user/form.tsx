@@ -55,7 +55,7 @@ import {
 } from '@shared/lib/request-asset-types';
 import { submitUserRequestFn } from '@backend/server/requests/request.functions';
 import { getMalaysiaHolidaysFn } from '@backend/server/operations/malaysia-holidays.functions';
-import { DatePickerField, FormField } from '@/technician/deploy-return-fields';
+import { DatePickerField, FormField } from '@/itd/deploy-return-fields';
 import { UserPageChrome } from '@/user/user-chrome';
 import { UserProfileCompleteDialog } from '@/user/profile-complete-dialog';
 import { getUserProfileFn } from '@backend/server/auth/auth.functions';

@@ -38,15 +38,15 @@ import { ASSET_KIND_LABEL, type AssetKind } from '@shared/lib/inventory-schema';
 import { PREDISPOSAL_REASON_LABEL, picturesComplete, type PreDisposedAsset } from '@shared/lib/disposal-schema';
 import { cn } from '@/lib/utils';
 import { usePagination } from '@/hooks/use-pagination';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
-import { TechnicianDisposalViewMenu } from '@/technician/disposal-view-menu';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
+import { TechnicianDisposalViewMenu } from '@/itd/disposal-view-menu';
+import { TechnicianShell } from '@/itd/technician-shell';
 import {
   listPreDisposedAssetsFn,
   removeAssetsFromPredisposalFn,
   removePredisposedPicturesFn,
 } from '@backend/server/assets/assets.functions';
-import { PredisposedPictureDialog } from '@/technician/predisposed-picture-dialog';
+import { PredisposedPictureDialog } from '@/itd/predisposed-picture-dialog';
 
 function assetKey(kind: AssetKind, assetId: PreDisposedAsset['assetId']) {
   return `${kind}:${assetId}`;
@@ -215,7 +215,7 @@ export function TechnicianPreDisposedPage() {
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Button variant="ghost" size="sm" type="button" className="-ml-2 mb-2 gap-1.5" asChild>
-            <Link to="/technician/disposal">
+            <Link to="/itd/disposal">
               <ArrowLeft className="h-4 w-4" />
               Back to disposal
             </Link>

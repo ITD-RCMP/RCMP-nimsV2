@@ -21,23 +21,23 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { NimsLogo } from '@/components/brand/NimsLogo';
 import { readPrivilegedSession } from '@shared/lib/auth-session';
 
-const DASH = '/technician/dashboard' as const;
-const LAPTOP = '/technician/laptop' as const;
-const AV = '/technician/av' as const;
-const NETWORK = '/technician/network' as const;
-const REQUESTS = '/technician/requests' as const;
+const DASH = '/itd/dashboard' as const;
+const LAPTOP = '/itd/laptop' as const;
+const AV = '/itd/av' as const;
+const NETWORK = '/itd/network' as const;
+const REQUESTS = '/itd/requests' as const;
 const REQUEST_ROUTES = [
   REQUESTS,
-  '/technician/request-assets',
-  '/technician/request-view',
-  '/technician/request-log',
+  '/itd/request-assets',
+  '/itd/request-view',
+  '/itd/request-log',
 ] as const;
-const MAINTENANCE = '/technician/preventive-maintenance' as const;
-const DISPOSAL = '/technician/disposal' as const;
-const PRE_DISPOSED = '/technician/pre-disposed' as const;
-const DISPOSED = '/technician/disposed' as const;
-const HISTORY = '/technician/history' as const;
-const REPORT = '/technician/report' as const;
+const MAINTENANCE = '/itd/preventive-maintenance' as const;
+const DISPOSAL = '/itd/disposal' as const;
+const PRE_DISPOSED = '/itd/pre-disposed' as const;
+const DISPOSED = '/itd/disposed' as const;
+const HISTORY = '/itd/history' as const;
+const REPORT = '/itd/report' as const;
 
 const HASH = {
   dashboard: '',
@@ -124,10 +124,10 @@ function TechSideBarNav() {
   const h = useNavHash();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const dashActive = pathname === '/technician/dashboard' && !h;
-  const laptopActive = pathname === '/technician/laptop';
-  const avActive = pathname === '/technician/av';
-  const networkActive = pathname === '/technician/network';
+  const dashActive = pathname === '/itd/dashboard' && !h;
+  const laptopActive = pathname === '/itd/laptop';
+  const avActive = pathname === '/itd/av';
+  const networkActive = pathname === '/itd/network';
   const requestsActive = REQUEST_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );

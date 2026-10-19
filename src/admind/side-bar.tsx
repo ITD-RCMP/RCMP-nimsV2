@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NimsLogo } from '@/components/brand/NimsLogo';
 
-const DASH = '/disposal-unit/dashboard' as const;
-const DISPOSAL = '/disposal-unit/disposal' as const;
-const HISTORY = '/disposal-unit/history' as const;
+const DASH = '/admind/dashboard' as const;
+const DISPOSAL = '/admind/disposal' as const;
+const HISTORY = '/admind/history' as const;
 
 function NavLink({
   to,
@@ -56,7 +56,7 @@ function DisposalUnitSideBarNav() {
         active={
           pathname === DISPOSAL ||
           pathname.startsWith(`${DISPOSAL}/`) ||
-          pathname === '/disposal-unit/disposal-form'
+          pathname === '/admind/disposal-form'
         }
       >
         Disposal

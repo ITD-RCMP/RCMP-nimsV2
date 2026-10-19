@@ -98,7 +98,7 @@ function LoginPage() {
               : await devLoginAsUserFn();
       persistSession(user);
       toast.success(`Dev sign-in as ${user.fullName}`);
-      void navigate({ to: getPostLoginPath(user.roleId) });
+      void navigate({ to: getPostLoginPath(user.roleId, user.departmentId) });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Dev sign-in unavailable';
       toast.error(message);

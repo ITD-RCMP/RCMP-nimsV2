@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DisposalUnitShell } from '@/disposal-unit/disposal-unit-shell';
+import { DisposalUnitShell } from '@/admind/disposal-unit-shell';
 import { usePagination } from '@/hooks/use-pagination';
 import { formatAssetLifespan, formatDateLabel } from '@shared/lib/date-format';
 import type { DisposalDashboardStats, PreDisposedAsset } from '@shared/lib/disposal-schema';
@@ -22,7 +22,7 @@ import {
   getDisposalDashboardStatsFn,
   listDisposalQueueAssetsFn,
 } from '@backend/server/assets/assets.functions';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
 
 function AttachmentStatusBadge({ complete }: { complete: boolean }) {
   return (

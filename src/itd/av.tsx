@@ -11,18 +11,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { TechnicianShell } from '@/technician/technician-shell';
-import { AssetStatusActions } from '@/technician/asset-status-actions';
-import { AssetStatusBadge } from '@/technician/asset-status-badge';
-import { RegisterAssetActions } from '@/technician/register-asset-actions';
+import { TechnicianShell } from '@/itd/technician-shell';
+import { AssetStatusActions } from '@/itd/asset-status-actions';
+import { AssetStatusBadge } from '@/itd/asset-status-badge';
+import { RegisterAssetActions } from '@/itd/register-asset-actions';
 import { filterBySearch, useAssets } from '@/hooks/assets';
 import { usePagination } from '@/hooks/use-pagination';
 import {
   AssetStockSummary,
   matchesAssetStockFilter,
   type AssetStockBreakdownFilter,
-} from '@/technician/asset-stock-summary';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
+} from '@/itd/asset-stock-summary';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
 import {
   EMPTY_PLACE_FILTER,
   formatPlaceCell,
@@ -30,7 +30,7 @@ import {
   PlaceTableHead,
   type AssetPlaceFilter,
   type PlaceColumnView,
-} from '@/technician/asset-place-column';
+} from '@/itd/asset-place-column';
 
 export function TechnicianAvPage() {
   const navigate = useNavigate();
@@ -152,14 +152,14 @@ export function TechnicianAvPage() {
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() =>
                         void navigate({
-                          to: '/technician/asset/$kind/$assetId',
+                          to: '/itd/asset/$kind/$assetId',
                           params: { kind: 'av', assetId: String(item.assetId) },
                         })
                       }
                     >
                       <TableCell>
                         <Link
-                          to="/technician/asset/$kind/$assetId"
+                          to="/itd/asset/$kind/$assetId"
                           params={{ kind: 'av', assetId: String(item.assetId) }}
                           className="text-primary underline-offset-2 hover:underline"
                           onClick={(e) => e.stopPropagation()}

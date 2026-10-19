@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { persistSession, type SessionUser } from '@shared/lib/auth-session';
 import { isUserProfileComplete, missingUserProfileFields } from '@shared/lib/user-profile';
 import { updateUserProfileFn } from '@backend/server/auth/auth.functions';
-import { FormField } from '@/technician/deploy-return-fields';
+import { FormField } from '@/itd/deploy-return-fields';
 
 type UserProfileCompleteDialogProps = {
   session: SessionUser;

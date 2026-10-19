@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { DisposalUnitDashboardPage } from '@/disposal-unit/dashboard';
+import { DisposalUnitDashboardPage } from '@/admind/dashboard';
 
-export const Route = createFileRoute('/disposal-unit/dashboard')({
+export const Route = createFileRoute('/admind/dashboard')({
   head: () => ({
     meta: [
       { title: 'Disposal unit | NIMS' },

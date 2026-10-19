@@ -13,7 +13,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { DisposalUnitShell } from '@/disposal-unit/disposal-unit-shell';
+import { DisposalUnitShell } from '@/admind/disposal-unit-shell';
 import { ASSET_KIND_LABEL } from '@shared/lib/inventory-schema';
 import {
   DISPOSAL_PUSAT_DEFAULT,
@@ -23,7 +23,7 @@ import {
   type PreDisposedAsset,
 } from '@shared/lib/disposal-schema';
 import { cn } from '@/lib/utils';
-import { DatePickerField } from '@/technician/deploy-return-fields';
+import { DatePickerField } from '@/itd/deploy-return-fields';
 import { downloadDisposalBundle } from '@/lib/disposal-documents';
 import {
   getDisposalReportFn,
@@ -59,7 +59,7 @@ function filledCount(fields: AssetFormFields) {
 
 export function DisposalUnitDisposalFormPage() {
   const navigate = useNavigate();
-  const search = useSearch({ from: '/disposal-unit/disposal-form' });
+  const search = useSearch({ from: '/admind/disposal-form' });
   const requested = useMemo(() => parseDisposalBatchAssets(search.assets), [search.assets]);
 
   const [queue, setQueue] = useState<PreDisposedAsset[]>([]);
@@ -190,7 +190,7 @@ export function DisposalUnitDisposalFormPage() {
             : 'Could not generate disposal documents. Open History to download the forms.',
         );
       }
-      await navigate({ to: '/disposal-unit/history' });
+      await navigate({ to: '/admind/history' });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not submit this disposal batch');
     } finally {
@@ -204,7 +204,7 @@ export function DisposalUnitDisposalFormPage() {
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <Button variant="ghost" size="sm" type="button" className="-ml-2 mb-1 gap-1.5" asChild>
-              <Link to="/disposal-unit/disposal">
+              <Link to="/admind/disposal">
                 <ArrowLeft className="h-4 w-4" />
                 Back to queue
               </Link>
@@ -229,7 +229,7 @@ export function DisposalUnitDisposalFormPage() {
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <Button variant="outline" className="rounded-[8px]" asChild>
-              <Link to="/disposal-unit/disposal">Cancel</Link>
+              <Link to="/admind/disposal">Cancel</Link>
             </Button>
             <Button
               type="button"

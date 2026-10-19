@@ -29,8 +29,8 @@ import {
   getPmLocationTreeFn,
   listPmAssetsAtPlaceFn,
 } from '@backend/server/operations/pm.functions';
-import { FormField } from '@/technician/deploy-return-fields';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { FormField } from '@/itd/deploy-return-fields';
+import { TechnicianShell } from '@/itd/technician-shell';
 
 type WizardStep = 0 | 1 | 2 | 3;
 
@@ -144,7 +144,7 @@ function StepFooter({
     <div className="mt-6 flex items-center justify-between gap-3 border-t border-border pt-4">
       {backHref ? (
         <Button type="button" variant="outline" className="rounded-[8px] gap-1.5" asChild>
-          <Link to="/technician/preventive-maintenance">
+          <Link to="/itd/preventive-maintenance">
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
@@ -437,7 +437,7 @@ export function PmFormPage() {
           ? `Maintenance saved · ${result.assetsTotal} asset${result.assetsTotal === 1 ? '' : 's'} in good condition`
           : `Maintenance saved · ${result.faultyCount} asset${result.faultyCount === 1 ? '' : 's'} flagged for further action`,
       );
-      await navigate({ to: '/technician/preventive-maintenance' });
+      await navigate({ to: '/itd/preventive-maintenance' });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Could not save maintenance');
     } finally {
@@ -449,7 +449,7 @@ export function PmFormPage() {
     <TechnicianShell>
       <div className="mb-4 sm:mb-5">
         <Button variant="ghost" size="sm" type="button" className="-ml-2 mb-2 gap-1.5" asChild>
-          <Link to="/technician/preventive-maintenance">
+          <Link to="/itd/preventive-maintenance">
             <ArrowLeft className="h-4 w-4" />
             Exit
           </Link>
@@ -491,7 +491,7 @@ export function PmFormPage() {
                 ))}
               </div>
             )}
-            <StepFooter backHref="/technician/preventive-maintenance" />
+            <StepFooter backHref="/itd/preventive-maintenance" />
           </CardContent>
         </Card>
       )}

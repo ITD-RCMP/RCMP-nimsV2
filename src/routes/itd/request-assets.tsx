@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianRequestAssetPage } from '@/technician/requestAssetPage';
+import { TechnicianRequestAssetPage } from '@/itd/requestAssetPage';
 
-export const Route = createFileRoute('/technician/request-assets')({
+export const Route = createFileRoute('/itd/request-assets')({
   head: () => ({
     meta: [
       { title: 'Request asset pool | NIMS' },

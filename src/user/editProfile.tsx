@@ -13,7 +13,7 @@ import {
   type SessionUser,
 } from '@shared/lib/auth-session';
 import { getUserProfileFn, updateUserProfileFn } from '@backend/server/auth/auth.functions';
-import { FormField } from '@/technician/deploy-return-fields';
+import { FormField } from '@/itd/deploy-return-fields';
 import { UserPageChrome } from '@/user/user-chrome';
 
 export function UserEditProfilePage() {

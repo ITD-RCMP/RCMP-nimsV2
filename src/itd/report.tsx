@@ -38,7 +38,7 @@ import {
   exportTechnicianAssetCsvFn,
   generateAssetReportPdfFn,
 } from '@backend/server/admin/technician-export.functions';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { TechnicianShell } from '@/itd/technician-shell';
 
 const CSV_EXPORTS: {
   kind: TechnicianAssetExportKind;

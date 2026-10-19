@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TechnicianRequestViewPage } from '@/technician/requestView';
+import { TechnicianRequestViewPage } from '@/itd/requestView';
 
-export const Route = createFileRoute('/technician/request-view')({
+export const Route = createFileRoute('/itd/request-view')({
   head: () => ({
     meta: [
       { title: 'Assigned request assets | NIMS' },

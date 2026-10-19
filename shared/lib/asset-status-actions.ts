@@ -14,7 +14,7 @@ export const STATUS_ID = {
   REQUEST_CHECKOUT: 8,
 } as const;
 
-export type AssetStatusNavigateHref = '/technician/deploy' | '/technician/return';
+export type AssetStatusNavigateHref = '/itd/deploy' | '/itd/return';
 
 export type AssetStatusAction = {
   key: string;
@@ -42,7 +42,7 @@ const DEPLOY_ACTION: AssetStatusAction = {
   key: 'deploy',
   label: 'Deploy',
   mode: 'navigate',
-  href: '/technician/deploy',
+  href: '/itd/deploy',
   icon: Truck,
   buttonClassName: `${actionBtn} border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-200 dark:hover:bg-sky-900`,
 };
@@ -51,7 +51,7 @@ const RETURN_ACTION: AssetStatusAction = {
   key: 'return',
   label: 'Return',
   mode: 'navigate',
-  href: '/technician/return',
+  href: '/itd/return',
   icon: Reply,
   buttonClassName: `${actionBtn} border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 dark:hover:bg-amber-900`,
 };

@@ -23,15 +23,15 @@ import {
   type PurchaseFormState,
 } from '@shared/lib/purchase-field-utils';
 import { canonicalizeLaptopCategory } from '@/hooks/assetid-generator';
-import { PurchaseFieldsSection } from '@/technician/asset-purchase-fields';
-import { LaptopCategoryFields } from '@/technician/laptop-category-fields';
+import { PurchaseFieldsSection } from '@/itd/asset-purchase-fields';
+import { LaptopCategoryFields } from '@/itd/laptop-category-fields';
 import {
   AssetDeploymentEditFields,
   buildDeploymentUpdateInput,
   deploymentToEditState,
   validateDeploymentEdit,
   type DeploymentEditState,
-} from '@/technician/asset-deployment-fields';
+} from '@/itd/asset-deployment-fields';
 import { updateAssetFn } from '@backend/server/assets/assets.functions';
 import { updateOpenDeploymentFn } from '@backend/server/requests/deploy-return.functions';
 import type { OpenReturnContext } from '@shared/lib/deploy-return-schema';

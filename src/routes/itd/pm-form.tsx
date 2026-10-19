@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { PmFormPage } from '@/technician/pm-form';
+import { PmFormPage } from '@/itd/pm-form';
 
-export const Route = createFileRoute('/technician/pm-form')({
+export const Route = createFileRoute('/itd/pm-form')({
   head: () => ({
     meta: [
       { title: 'Run maintenance | NIMS' },

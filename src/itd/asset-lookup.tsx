@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { findAssetByCodeFn } from '@backend/server/assets/assets.functions';
-import { AssetBarcodeScanner } from '@/technician/asset-barcode-scanner';
+import { AssetBarcodeScanner } from '@/itd/asset-barcode-scanner';
 
 type AssetLookupButtonProps = {
   variant?: 'technician' | 'admin';
@@ -43,7 +43,7 @@ export function AssetLookupButton({ variant = 'technician' }: AssetLookupButtonP
           to:
             variant === 'admin'
               ? '/admin/asset/$kind/$assetId'
-              : '/technician/asset/$kind/$assetId',
+              : '/itd/asset/$kind/$assetId',
           params: { kind: result.asset.kind, assetId: String(result.asset.assetId) },
         });
       } catch (err) {

@@ -45,10 +45,10 @@ import {
 } from '@/hooks/assetid-generator';
 import { useNextAssetId } from '@/hooks/use-next-asset-id';
 import { cn } from '@/lib/utils';
-import { TechnicianShell } from '@/technician/technician-shell';
-import { LaptopCategoryFields } from '@/technician/laptop-category-fields';
-import { PurchaseFieldsSection } from '@/technician/asset-purchase-fields';
-import { WarrantyFieldsSection } from '@/technician/warranty-fields';
+import { TechnicianShell } from '@/itd/technician-shell';
+import { LaptopCategoryFields } from '@/itd/laptop-category-fields';
+import { PurchaseFieldsSection } from '@/itd/asset-purchase-fields';
+import { WarrantyFieldsSection } from '@/itd/warranty-fields';
 import {
   ASSET_KIND_LABEL,
   ASSET_LIST_PATH,
@@ -170,12 +170,12 @@ export function TechnicianAddAssetPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-2 pt-0">
                 <Button variant="outline" size="sm" className="w-full rounded-[8px]" asChild>
-                  <Link to="/technician/add-asset" search={{ kind: k }}>
+                  <Link to="/itd/add-asset" search={{ kind: k }}>
                     Register assets
                   </Link>
                 </Button>
                 <Button variant="secondary" size="sm" className="w-full rounded-[8px]" asChild>
-                  <Link to="/technician/bulk-import" search={{ kind: k }}>
+                  <Link to="/itd/bulk-import" search={{ kind: k }}>
                     Bulk import
                   </Link>
                 </Button>
@@ -193,7 +193,7 @@ export function TechnicianAddAssetPage() {
         kind={kind}
         onBack={() => {
           setSelectedKind(null);
-          void navigate({ to: '/technician/add-asset', search: {} });
+          void navigate({ to: '/itd/add-asset', search: {} });
         }}
         onCreated={(createdKind, count) => {
           toast.success(

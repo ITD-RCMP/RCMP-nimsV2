@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { PMpage } from '@/technician/pm-page';
+import { PMpage } from '@/itd/pm-page';
 
-export const Route = createFileRoute('/technician/preventive-maintenance')({
+export const Route = createFileRoute('/itd/preventive-maintenance')({
   head: () => ({
     meta: [
       { title: 'Preventive maintenance | NIMS' },

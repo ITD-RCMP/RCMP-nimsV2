@@ -44,10 +44,10 @@ import type { WarrantyContext } from '@shared/lib/warranty-repair-schema';
 import { getWarrantyContextFn } from '@backend/server/requests/warranty-repair.functions';
 import { formatPurchaseCost } from '@shared/lib/purchase-field-utils';
 import { cn } from '@/lib/utils';
-import { AssetStatusBadge } from '@/technician/asset-status-badge';
-import { AssetStatusActions } from '@/technician/asset-status-actions';
-import { AssetDetailsForm } from '@/technician/asset-details-form';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { AssetStatusBadge } from '@/itd/asset-status-badge';
+import { AssetStatusActions } from '@/itd/asset-status-actions';
+import { AssetDetailsForm } from '@/itd/asset-details-form';
+import { TechnicianShell } from '@/itd/technician-shell';
 import { getAssetDetailFn } from '@backend/server/assets/assets.functions';
 import { getOpenReturnContextFn } from '@backend/server/requests/deploy-return.functions';
 
@@ -346,7 +346,7 @@ function TrailEventLinks({ event, readOnly }: { event: AssetTrailEvent; readOnly
     <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2">
       {event.requestId != null && (
         <Link
-          to="/technician/request-log"
+          to="/itd/request-log"
           className="inline-flex items-center gap-1 text-xs text-[oklch(0.45_0.12_290)] hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
@@ -664,7 +664,7 @@ export function AssetViewContent({
                       </div>
                       {!readOnly ? (
                         <Button variant="outline" size="sm" className="shrink-0 rounded-full" asChild>
-                          <Link to="/technician/history">
+                          <Link to="/itd/history">
                             Full history
                             <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
                           </Link>

@@ -30,10 +30,10 @@ import { ASSET_KIND_LABEL, type AssetKind } from '@shared/lib/inventory-schema';
 import { isLifespanOverYears, type PredisposalEligibleAsset, type PreDisposedAsset } from '@shared/lib/disposal-schema';
 import { cn } from '@/lib/utils';
 import { usePagination } from '@/hooks/use-pagination';
-import { AssetStatusBadge } from '@/technician/asset-status-badge';
-import { AssetTablePagination } from '@/technician/asset-table-pagination';
-import { TechnicianDisposalViewMenu } from '@/technician/disposal-view-menu';
-import { TechnicianShell } from '@/technician/technician-shell';
+import { AssetStatusBadge } from '@/itd/asset-status-badge';
+import { AssetTablePagination } from '@/itd/asset-table-pagination';
+import { TechnicianDisposalViewMenu } from '@/itd/disposal-view-menu';
+import { TechnicianShell } from '@/itd/technician-shell';
 import {
   listPredisposalEligibleAssetsFn,
   listPreDisposedAssetsFn,
@@ -210,7 +210,7 @@ export function TechnicianDisposalPage() {
           label="Total pre-disposed"
           value={preDisposedAssets.length}
           tone="amber"
-          href="/technician/pre-disposed"
+          href="/itd/pre-disposed"
         >
           <KindCountList assets={preDisposedAssets} />
         </InsightStatCard>

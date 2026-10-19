@@ -32,9 +32,9 @@ export const ASSET_KIND_LABEL: Record<AssetKind, string> = {
 };
 
 export const ASSET_LIST_PATH: Record<AssetKind, string> = {
-  laptop: '/technician/laptop',
-  av: '/technician/av',
-  network: '/technician/network',
+  laptop: '/itd/laptop',
+  av: '/itd/av',
+  network: '/itd/network',
 };
 
 /** Columns shared by laptop, network, av (schema PO_* / purchase) */
@@ -470,7 +470,7 @@ export function isOutstockStatus(statusId: number): boolean {
 }
 
 export function assetViewPath(kind: AssetKind, assetId: AssetId): string {
-  return `/technician/asset/${kind}/${encodeURIComponent(String(assetId))}`;
+  return `/itd/asset/${kind}/${encodeURIComponent(String(assetId))}`;
 }
 
 export function isBulkImportRequiredColumn(kind: AssetKind, column: string): boolean {

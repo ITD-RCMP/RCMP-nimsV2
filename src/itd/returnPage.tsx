@@ -10,7 +10,7 @@ import type { OpenReturnContext } from '@shared/lib/deploy-return-schema';
 import { missingStaffDirectoryFields, staffDirectoryIncompleteMessage } from '@shared/lib/deploy-return-schema';
 import { sameAssetId } from '@shared/lib/inventory-schema';
 import { ASSET_KIND_LABEL, ASSET_LIST_PATH, useAssets } from '@/hooks/assets';
-import { Route } from '@/routes/technician/return';
+import { Route } from '@/routes/itd/return';
 import {
   getOpenReturnContextFn,
   returnLaptopPlaceFn,
@@ -23,8 +23,8 @@ import {
   queueReturnEmailFn,
   sendReturnEmailFn,
 } from '@backend/server/email/return-email.functions';
-import { TechnicianShell } from '@/technician/technician-shell';
-import { ReturnDetailsFields } from '@/technician/deploy-return-fields';
+import { TechnicianShell } from '@/itd/technician-shell';
+import { ReturnDetailsFields } from '@/itd/deploy-return-fields';
 import { STATUS_ID } from '@shared/lib/asset-status-actions';
 import { isLeasingCategory } from '@/hooks/assetid-generator';
 
@@ -142,7 +142,7 @@ export function TechnicianReturnPage() {
       <TechnicianShell>
         <p className="text-sm text-destructive">Invalid return link. Open return from an asset listing.</p>
         <Button variant="outline" className="mt-4 rounded-[8px]" asChild>
-          <Link to="/technician/dashboard">Back to dashboard</Link>
+          <Link to="/itd/dashboard">Back to dashboard</Link>
         </Button>
       </TechnicianShell>
     );

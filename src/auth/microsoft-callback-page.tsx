@@ -46,7 +46,7 @@ export function MicrosoftCallbackPage() {
         } else {
           toast.success(`Signed in as ${user.fullName}`);
         }
-        void navigate({ to: getPostLoginPath(user.roleId) });
+        void navigate({ to: getPostLoginPath(user.roleId, user.departmentId) });
       })
       .catch((err) => {
         const message = err instanceof Error ? err.message : 'Microsoft sign-in failed';

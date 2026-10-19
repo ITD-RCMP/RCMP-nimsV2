@@ -72,7 +72,7 @@ function AssetIdLink({
 
   return (
     <Link
-      to="/technician/asset/$kind/$assetId"
+      to="/itd/asset/$kind/$assetId"
       params={{ kind, assetId: String(assetId) }}
       className="text-foreground underline-offset-2 hover:underline"
     >

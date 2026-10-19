@@ -26,6 +26,7 @@ export type AppSessionData = {
   fullName: string;
   email: string;
   phone: string | null;
+  departmentId: number | null;
   issuedAt: number;
   lastActivityAt: number;
   sessionVersion: number;
@@ -141,6 +142,7 @@ export async function establishSession(user: AuthUserRow): Promise<void> {
     fullName: user.fullName,
     email: user.email,
     phone: user.phone,
+    departmentId: user.departmentId,
     issuedAt: now,
     lastActivityAt: now,
     sessionVersion,
@@ -216,6 +218,7 @@ export async function evaluateWebSession(mode: 'read' | 'touch' | 'force'): Prom
       fullName: data.fullName ?? '',
       email: data.email ?? '',
       phone: data.phone ?? null,
+      departmentId: data.departmentId ?? null,
       issuedAt: data.issuedAt,
       lastActivityAt,
       sessionVersion: data.sessionVersion,

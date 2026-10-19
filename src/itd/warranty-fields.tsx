@@ -1,6 +1,6 @@
 import { Textarea } from '@/components/ui/textarea';
 import type { WarrantyFormState } from '@/lib/warranty-field-utils';
-import { DatePickerField, FormField } from '@/technician/deploy-return-fields';
+import { DatePickerField, FormField } from '@/itd/deploy-return-fields';
 
 export function WarrantyFieldsSection({
   values,
