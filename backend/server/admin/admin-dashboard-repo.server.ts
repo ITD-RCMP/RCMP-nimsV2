@@ -184,6 +184,8 @@ export async function getAdminDashboard(periodDays: AdminPeriodDays): Promise<Ad
   const [lifecycleRows] = await pool.query<
     (RowDataPacket & {
       deployed: number;
+      available: number;
+      pre_disposed: number;
       warranties_expiring: number;
     })[]
   >(
@@ -191,6 +193,12 @@ export async function getAdminDashboard(periodDays: AdminPeriodDays): Promise<Ad
       (SELECT COUNT(*) FROM laptop WHERE status_id = 3) +
       (SELECT COUNT(*) FROM av WHERE status_id = 3) +
       (SELECT COUNT(*) FROM network WHERE status_id = 3) AS deployed,
+      (SELECT COUNT(*) FROM laptop WHERE status_id IN (1,2)) +
+      (SELECT COUNT(*) FROM av WHERE status_id IN (1,2)) +
+      (SELECT COUNT(*) FROM network WHERE status_id IN (1,2)) AS available,
+      (SELECT COUNT(*) FROM laptop WHERE status_id = 4) +
+      (SELECT COUNT(*) FROM av WHERE status_id = 4) +
+      (SELECT COUNT(*) FROM network WHERE status_id = 4) AS pre_disposed,
       (SELECT COUNT(*) FROM warranty
        WHERE warranty_end_date >= ? AND warranty_end_date <= ?) AS warranties_expiring`,
     [today, warrantyEnd],
@@ -198,6 +206,8 @@ export async function getAdminDashboard(periodDays: AdminPeriodDays): Promise<Ad
   const lc = lifecycleRows[0];
   const lifecycle: LifecycleSnapshot = {
     deployedAssets: Number(lc?.deployed ?? 0),
+    availableAssets: Number(lc?.available ?? 0),
+    preDisposedAssets: Number(lc?.pre_disposed ?? 0),
     warrantiesExpiringSoon: Number(lc?.warranties_expiring ?? 0),
   };
 

@@ -38,6 +38,8 @@ export type RecentRejectionRow = {
 
 export type LifecycleSnapshot = {
   deployedAssets: number;
+  availableAssets: number;
+  preDisposedAssets: number;
   warrantiesExpiringSoon: number;
 };
 

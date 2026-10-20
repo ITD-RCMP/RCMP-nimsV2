@@ -131,6 +131,7 @@ function AssetKindDetails({ assetsByKind }: { assetsByKind: AssetKindDetail[] })
 
 function LifecyclePanel({ data }: { data: AdminDashboardData | null }) {
   const lc = data?.lifecycle;
+  const stats = data?.stats;
 
   return (
     <Card className="rounded-2xl border-border shadow-sm">
@@ -140,23 +141,55 @@ function LifecyclePanel({ data }: { data: AdminDashboardData | null }) {
           Asset lifecycle
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-muted/40 p-3">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Deployed assets
-          </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-            {lc?.deployedAssets ?? 0}
-          </p>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-muted/40 p-3">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              Deployed
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+              {lc?.deployedAssets ?? 0}
+            </p>
+          </div>
+          <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-950/30">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              Available
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-emerald-800 dark:text-emerald-300">
+              {lc?.availableAssets ?? 0}
+            </p>
+          </div>
+          <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-950/30">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
+              Warranty exp. (30d)
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-amber-800 dark:text-amber-300">
+              {lc?.warrantiesExpiringSoon ?? 0}
+            </p>
+          </div>
+          <div className="rounded-xl bg-rose-50 p-3 dark:bg-rose-950/30">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-rose-700 dark:text-rose-400">
+              Pre-disposed
+            </p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-rose-800 dark:text-rose-300">
+              {lc?.preDisposedAssets ?? 0}
+            </p>
+          </div>
         </div>
-        <div className="rounded-xl bg-amber-50 p-3 dark:bg-amber-950/30">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
-            Warranties expiring (30d)
-          </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-amber-800 dark:text-amber-300">
-            {lc?.warrantiesExpiringSoon ?? 0}
-          </p>
-        </div>
+        <ul className="space-y-1 border-t border-border/60 pt-2">
+          {[
+            { label: 'On loan now', value: stats?.onLoanNow ?? 0 },
+            { label: 'Due in 7 days', value: stats?.onLoanDueSoon ?? 0 },
+            { label: 'Overdue returns', value: stats?.onLoanOverdue ?? 0, warn: true },
+          ].map(({ label, value, warn }) => (
+            <li key={label} className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>{label}</span>
+              <span className={cn('tabular-nums font-medium', warn && value > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-foreground')}>
+                {value}
+              </span>
+            </li>
+          ))}
+        </ul>
       </CardContent>
     </Card>
   );
