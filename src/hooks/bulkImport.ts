@@ -861,7 +861,12 @@ export function downloadCsvFile(filename: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function commitBulkImport(preview: BulkImportPreview): Promise<number> {
+export type CommitBulkImportResult = {
+  count: number;
+  rows: BulkLaptopImportRow[] | BulkAvImportRow[] | BulkNetworkImportRow[];
+};
+
+export async function commitBulkImport(preview: BulkImportPreview): Promise<CommitBulkImportResult> {
   if (preview.kind === 'laptop' && preview.laptopRows?.length) {
     return bulkCreateLaptopsImportFn({ data: preview.laptopRows });
   }
@@ -871,7 +876,7 @@ export async function commitBulkImport(preview: BulkImportPreview): Promise<numb
   if (preview.kind === 'network' && preview.networkRows?.length) {
     return bulkCreateNetworkImportFn({ data: preview.networkRows });
   }
-  return 0;
+  return { count: 0, rows: [] };
 }
 
 export function useBulkImport() {
@@ -905,7 +910,7 @@ export function useBulkImport() {
   const clearPreview = useCallback(() => setPreview(null), []);
 
   const commit = useCallback(async () => {
-    if (!preview || preview.validCount === 0) return 0;
+    if (!preview || preview.validCount === 0) return { count: 0, rows: [] };
     return commitBulkImport(preview);
   }, [preview]);
 

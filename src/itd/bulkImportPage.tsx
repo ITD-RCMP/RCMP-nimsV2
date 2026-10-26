@@ -29,7 +29,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { downloadBase64File } from '@/lib/download-blob';
 import { TechnicianShell } from '@/itd/technician-shell';
+import { generateBulkImportPdfFn } from '@backend/server/pdf/bulk-import-pdf.functions';
+import type { BulkImportPdfRow } from '@backend/server/pdf/bulk-import-pdf.server';
 import { IMPORT_DATE_FORMAT_HINT, PURCHASE_DATE_COLUMNS } from '@shared/lib/date-format';
 import { INVENTORY_STATUSES, formatStatusLabel } from '@shared/lib/inventory-schema';
 import { ASSET_KIND_LABEL, ASSET_LIST_PATH, type AssetKind } from '@/hooks/assets';
@@ -43,6 +46,9 @@ import {
   excelFileToCsv,
   LAPTOP_CATEGORY_OPTIONS,
   useBulkImport,
+  type BulkAvImportRow,
+  type BulkLaptopImportRow,
+  type BulkNetworkImportRow,
 } from '@/hooks/bulkImport';
 import { ASSET_ID_PREFIX, getLaptopAssetIdPrefix } from '@/hooks/assetid-generator';
 
@@ -56,6 +62,33 @@ const KIND_OPTIONS: { kind: AssetKind; icon: typeof Laptop; description: string 
 
 function isAssetKind(value: unknown): value is AssetKind {
   return value === 'laptop' || value === 'av' || value === 'network';
+}
+
+function deployInfoForRow(row: BulkLaptopImportRow | BulkAvImportRow | BulkNetworkImportRow): string {
+  if ('handover' in row && row.handover) {
+    return row.handover.employeeNo
+      ? `Handover: ${row.handover.handoverStaffEmail} · ${row.handover.employeeNo}`
+      : `Facility: ${row.handover.building ?? '-'} / ${row.handover.level ?? '-'} / ${row.handover.zone ?? '-'}`;
+  }
+  if ('deployment' in row && row.deployment) {
+    return `Deploy: ${row.deployment.deploymentStaffEmail} · ${row.deployment.building}`;
+  }
+  return 'In stock';
+}
+
+function toBulkImportPdfRows(
+  rows: (BulkLaptopImportRow | BulkAvImportRow | BulkNetworkImportRow)[],
+): BulkImportPdfRow[] {
+  return rows.map((row) => ({
+    assetId: row.assetId != null && row.assetId !== '' ? String(row.assetId) : 'Auto-generated',
+    category: 'category' in row && row.category ? row.category : '—',
+    brand: 'brand' in row && row.brand ? row.brand : '—',
+    model: row.model ?? '—',
+    supplier: row.supplier ?? '—',
+    serialNum: row.serialNum ?? '—',
+    statusId: row.statusId,
+    deployInfo: deployInfoForRow(row),
+  }));
 }
 
 type GuideField = { name: string; hint: string };
@@ -260,7 +293,18 @@ function BulkImportWorkspace({
     }
     setImporting(true);
     try {
-      const count = await commit();
+      const { count, rows: committedRows } = await commit();
+      const rowsForPdf = toBulkImportPdfRows(committedRows);
+      if (rowsForPdf.length > 0) {
+        try {
+          const { base64, filename } = await generateBulkImportPdfFn({
+            data: { kind, rows: rowsForPdf },
+          });
+          downloadBase64File(base64, filename, 'application/pdf');
+        } catch {
+          toast.error('Imported, but the summary PDF could not be generated.');
+        }
+      }
       onImported(kind, count);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'The import could not be completed. Try again.';
@@ -290,8 +334,19 @@ function BulkImportWorkspace({
     try {
       const text = isExcel ? await excelFileToCsv(file) : await file.text();
       setCsvText(text);
-      clearPreview();
-      toast.message('File loaded — click Parse preview');
+      if (!text.trim()) {
+        clearPreview();
+        toast.error('The file is empty.');
+        return;
+      }
+      const result = parseText(kind, text);
+      if (result.errorCount > 0 && result.validCount === 0) {
+        toast.error('No valid rows found. Review and fix the errors listed below.');
+      } else if (result.errorCount > 0) {
+        toast.warning(`${result.validCount} valid, ${result.errorCount} row(s) with errors`);
+      } else {
+        toast.success(`${result.validCount} row(s) ready to import`);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'The file could not be read.');
     }
@@ -551,39 +606,143 @@ function BulkImportWorkspace({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="space-y-2">
-            <Label htmlFor="csv-paste">CSV content</Label>
-            <Textarea
-              id="csv-paste"
-              value={csvText}
-              onChange={(e) => {
-                setCsvText(e.target.value);
-                clearPreview();
-              }}
-              placeholder={getTemplate(kind)}
-              className="min-h-[140px] font-mono text-xs rounded-[8px]"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              className="rounded-[8px] bg-emerald-600 text-white hover:bg-emerald-600/90 dark:bg-emerald-700 dark:hover:bg-emerald-700/90"
-              disabled={isParsing}
-              onClick={handleParse}
-            >
-              {isParsing ? 'Processing…' : 'Import Bulk'}
-            </Button>
-            {preview && (
-              <Button
-                type="button"
-                className="rounded-[8px]"
-                disabled={importing || preview.validCount === 0}
-                onClick={handleImport}
-              >
-                {importing ? 'Importing…' : `Import ${preview.validCount} asset(s)`}
-              </Button>
-            )}
-          </div>
+          {!preview && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="csv-paste">CSV content</Label>
+                <Textarea
+                  id="csv-paste"
+                  value={csvText}
+                  onChange={(e) => {
+                    setCsvText(e.target.value);
+                    clearPreview();
+                  }}
+                  placeholder={getTemplate(kind)}
+                  className="min-h-[140px] font-mono text-xs rounded-[8px]"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  className="rounded-[8px] bg-emerald-600 text-white hover:bg-emerald-600/90 dark:bg-emerald-700 dark:hover:bg-emerald-700/90"
+                  disabled={isParsing}
+                  onClick={handleParse}
+                >
+                  {isParsing ? 'Processing…' : 'Preview Bulk'}
+                </Button>
+              </div>
+            </>
+          )}
+
+          {preview && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="default" className="rounded-[8px] bg-emerald-600/10 text-emerald-700 dark:bg-emerald-700/10 dark:text-emerald-600">
+                  {preview.validCount} valid
+                </Badge>
+                {preview.errorCount > 0 && (
+                  <Badge variant="destructive" className="rounded-[8px] bg-destructive/10 text-destructive dark:bg-destructive/10 dark:text-destructive">
+                    {preview.errorCount} row error(s)
+                  </Badge>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-[8px]"
+                  onClick={clearPreview}
+                >
+                  Edit CSV
+                </Button>
+                <Button
+                  type="button"
+                  className="ml-auto rounded-[8px]"
+                  disabled={importing || preview.validCount === 0}
+                  onClick={handleImport}
+                >
+                  {importing ? 'Importing…' : `Import ${preview.validCount} asset(s)`}
+                </Button>
+              </div>
+
+              {preview.errors.length > 0 && (
+                <Card className="rounded-[14px] border-destructive/30 bg-destructive/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm text-destructive">Validation errors</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="max-h-32 space-y-1 overflow-y-auto text-xs text-destructive">
+                      {preview.errors.map((err, i) => (
+                        <li key={`${err.row}-${i}`}>
+                          {err.row === 0 ? 'Header' : `Row ${err.row}`}: {err.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
+              {previewRows && previewRows.length > 0 && (
+                <Card className="overflow-hidden rounded-[14px] border-border shadow-sm">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Preview ({previewRows.length} rows)</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <ScrollArea className="max-h-[320px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="font-semibold">Asset ID</TableHead>
+                            <TableHead className="font-semibold">Acc code</TableHead>
+                            <TableHead className="font-semibold">Model</TableHead>
+                            <TableHead className="font-semibold">Brand</TableHead>
+                            <TableHead className="font-semibold">Supplier</TableHead>
+                            <TableHead className="font-semibold">Serial</TableHead>
+                            <TableHead className="font-semibold">Status</TableHead>
+                            <TableHead className="font-semibold">Deploy</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {previewRows.slice(0, 20).map((row, i) => (
+                            <TableRow key={i}>
+                              <TableCell>
+                                <code className="text-xs">{row.assetId ?? 'auto'}</code>
+                              </TableCell>
+                              <TableCell className="font-mono text-xs text-muted-foreground">
+                                {row.accCode ?? '—'}
+                              </TableCell>
+                              <TableCell className="font-medium">{row.model}</TableCell>
+                              <TableCell className="text-muted-foreground">{'brand' in row ? row.brand ?? '—' : '—'}</TableCell>
+                              <TableCell className="text-muted-foreground">{row.supplier ?? '—'}</TableCell>
+                              <TableCell className="text-muted-foreground">{row.serialNum ?? '—'}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="rounded-[6px] text-[10px]">
+                                  {formatStatusLabel(row.statusId)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
+                                {'handover' in row && row.handover
+                                  ? row.handover.employeeNo
+                                    ? `Handover ${row.handover.handoverStaffEmail} · ${row.handover.handoverDate} · ${row.handover.employeeNo}`
+                                    : `Facility ${row.handover.building ?? ''} / ${row.handover.level ?? '-'} / ${row.handover.zone ?? '-'}${row.handover.handler ? ` · ${row.handover.handler}` : ''}`
+                                    : 'deployment' in row && row.deployment
+                                      ? `${row.deployment.deploymentStaffEmail} · ${row.deployment.building} / ${row.deployment.level} / ${row.deployment.zone}`
+                                      : '—'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                    {previewRows.length > 20 && (
+                      <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+                        Showing first 20 of {previewRows.length} rows
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -668,99 +827,6 @@ function BulkImportWorkspace({
           </div>
         </DialogContent>
       </Dialog>
-
-      {preview && (
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="default" className="rounded-[8px]">
-              {preview.validCount} valid
-            </Badge>
-            {preview.errorCount > 0 && (
-              <Badge variant="destructive" className="rounded-[8px]">
-                {preview.errorCount} row error(s)
-              </Badge>
-            )}
-          </div>
-
-          {preview.errors.length > 0 && (
-            <Card className="rounded-[14px] border-destructive/30 bg-destructive/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-destructive">Validation errors</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="max-h-32 space-y-1 overflow-y-auto text-xs text-destructive">
-                  {preview.errors.map((err, i) => (
-                    <li key={`${err.row}-${i}`}>
-                      {err.row === 0 ? 'Header' : `Row ${err.row}`}: {err.message}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
-
-          {previewRows && previewRows.length > 0 && (
-            <Card className="overflow-hidden rounded-[14px] border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Preview ({previewRows.length} rows)</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="max-h-[320px]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="font-semibold">Asset ID</TableHead>
-                        <TableHead className="font-semibold">Acc code</TableHead>
-                        <TableHead className="font-semibold">Model</TableHead>
-                        <TableHead className="font-semibold">Brand</TableHead>
-                        <TableHead className="font-semibold">Supplier</TableHead>
-                        <TableHead className="font-semibold">Serial</TableHead>
-                        <TableHead className="font-semibold">Status</TableHead>
-                        <TableHead className="font-semibold">Deploy</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {previewRows.slice(0, 20).map((row, i) => (
-                        <TableRow key={i}>
-                          <TableCell>
-                            <code className="text-xs">{row.assetId ?? 'auto'}</code>
-                          </TableCell>
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {row.accCode ?? '—'}
-                          </TableCell>
-                          <TableCell className="font-medium">{row.model}</TableCell>
-                          <TableCell className="text-muted-foreground">{'brand' in row ? row.brand ?? '—' : '—'}</TableCell>
-                          <TableCell className="text-muted-foreground">{row.supplier ?? '—'}</TableCell>
-                          <TableCell className="text-muted-foreground">{row.serialNum ?? '—'}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="rounded-[6px] text-[10px]">
-                              {formatStatusLabel(row.statusId)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
-                            {'handover' in row && row.handover
-                              ? row.handover.employeeNo
-                                ? `Handover ${row.handover.handoverStaffEmail} · ${row.handover.handoverDate} · ${row.handover.employeeNo}`
-                                : `Facility ${row.handover.building ?? ''} / ${row.handover.level ?? '-'} / ${row.handover.zone ?? '-'}${row.handover.handler ? ` · ${row.handover.handler}` : ''}`
-                              : 'deployment' in row && row.deployment
-                                ? `${row.deployment.deploymentStaffEmail} · ${row.deployment.building} / ${row.deployment.level} / ${row.deployment.zone}`
-                                : '—'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-                {previewRows.length > 20 && (
-                  <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
-                    Showing first 20 of {previewRows.length} rows
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
     </>
   );
 }

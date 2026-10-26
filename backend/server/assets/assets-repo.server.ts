@@ -794,15 +794,21 @@ export async function bulkCreateLaptopsWithGeneratedIds(
   rows: BulkLaptopImportRow[],
   registrar: LaptopRegistrar | null = null,
 ) {
-  return bulkCreateLaptops(await fillLaptopAssetIds(rows), registrar);
+  const filled = await fillLaptopAssetIds(rows);
+  const count = await bulkCreateLaptops(filled, registrar);
+  return { count, rows: filled };
 }
 
 export async function bulkCreateAvWithGeneratedIds(rows: BulkAvImportRow[]) {
-  return bulkCreateAv(await fillAvAssetIds(rows));
+  const filled = await fillAvAssetIds(rows);
+  const count = await bulkCreateAv(filled);
+  return { count, rows: filled };
 }
 
 export async function bulkCreateNetworkWithGeneratedIds(rows: BulkNetworkImportRow[]) {
-  return bulkCreateNetwork(await fillNetworkAssetIds(rows));
+  const filled = await fillNetworkAssetIds(rows);
+  const count = await bulkCreateNetwork(filled);
+  return { count, rows: filled };
 }
 
 const TABLE_BY_KIND: Record<AssetKind, string> = {

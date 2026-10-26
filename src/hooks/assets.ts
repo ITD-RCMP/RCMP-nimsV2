@@ -100,11 +100,11 @@ export function useAssets<K extends AssetKind>(kind: K) {
     ) => {
       let count = 0;
       if (kind === 'laptop') {
-        count = await bulkCreateLaptopsImportFn({ data: rows as Omit<CreateLaptopInput, 'assetId'>[] });
+        count = (await bulkCreateLaptopsImportFn({ data: rows as Omit<CreateLaptopInput, 'assetId'>[] })).count;
       } else if (kind === 'av') {
-        count = await bulkCreateAvImportFn({ data: rows as Omit<CreateAvInput, 'assetId'>[] });
+        count = (await bulkCreateAvImportFn({ data: rows as Omit<CreateAvInput, 'assetId'>[] })).count;
       } else {
-        count = await bulkCreateNetworkImportFn({ data: rows as Omit<CreateNetworkInput, 'assetId'>[] });
+        count = (await bulkCreateNetworkImportFn({ data: rows as Omit<CreateNetworkInput, 'assetId'>[] })).count;
       }
       await refetch();
       return count;
