@@ -18,7 +18,7 @@ import {
   type CreateLaptopInput,
   type CreateNetworkInput,
 } from '@shared/lib/inventory-schema';
-import { canonicalizeLaptopCategory, composeAssetId, getLaptopAssetIdPrefix, isValidAssetTag, LAPTOP_CATEGORY_OPTIONS, normalizeAssetTag, STORED_ASSET_ID_PATTERN } from '@/hooks/assetid-generator';
+import { assetIdNumericCore, canonicalizeLaptopCategory, composeAssetId, getLaptopAssetIdPrefix, isValidAssetTag, LAPTOP_CATEGORY_OPTIONS, normalizeAssetTag, STORED_ASSET_ID_PATTERN } from '@/hooks/assetid-generator';
 import { parseOptionalDate, parsePurchaseFromRow } from '@shared/lib/purchase-field-utils';
 import { parseWarrantyFromRow } from '@/lib/warranty-field-utils';
 import {
@@ -681,7 +681,16 @@ function parseLaptopRows(headers: string[], rows: string[][]) {
 
     if (category) {
       try {
-        getLaptopAssetIdPrefix(category);
+        const categoryPrefix = getLaptopAssetIdPrefix(category);
+        if (assetId !== undefined) {
+          const providedPrefix = Math.floor((assetIdNumericCore(assetId) ?? 0) / 100_000);
+          if (providedPrefix !== categoryPrefix) {
+            errors.push({
+              row: rowNum,
+              message: `Asset ID prefix ${providedPrefix} does not match category "${category}" (expected prefix ${categoryPrefix}). Leave asset_id blank to auto-generate, or fix the prefix.`,
+            });
+          }
+        }
       } catch (e) {
         errors.push({
           row: rowNum,
