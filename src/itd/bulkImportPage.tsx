@@ -64,18 +64,6 @@ function isAssetKind(value: unknown): value is AssetKind {
   return value === 'laptop' || value === 'av' || value === 'network';
 }
 
-function deployInfoForRow(row: BulkLaptopImportRow | BulkAvImportRow | BulkNetworkImportRow): string {
-  if ('handover' in row && row.handover) {
-    return row.handover.employeeNo
-      ? `Handover: ${row.handover.handoverStaffEmail} · ${row.handover.employeeNo}`
-      : `Facility: ${row.handover.building ?? '-'} / ${row.handover.level ?? '-'} / ${row.handover.zone ?? '-'}`;
-  }
-  if ('deployment' in row && row.deployment) {
-    return `Deploy: ${row.deployment.deploymentStaffEmail} · ${row.deployment.building}`;
-  }
-  return 'In stock';
-}
-
 function toBulkImportPdfRows(
   rows: (BulkLaptopImportRow | BulkAvImportRow | BulkNetworkImportRow)[],
 ): BulkImportPdfRow[] {
@@ -86,8 +74,7 @@ function toBulkImportPdfRows(
     model: row.model ?? '—',
     supplier: row.supplier ?? '—',
     serialNum: row.serialNum ?? '—',
-    statusId: row.statusId,
-    deployInfo: deployInfoForRow(row),
+    purchaseCost: row.purchaseCost != null ? String(row.purchaseCost) : '—',
   }));
 }
 

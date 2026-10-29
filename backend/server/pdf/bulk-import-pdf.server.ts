@@ -1,7 +1,7 @@
 import type { Template } from '@pdfme/common';
 import { generate } from '@pdfme/generator';
 import { image, text } from '@pdfme/schemas';
-import { ASSET_KIND_LABEL, formatStatusLabel, type AssetKind } from '@shared/lib/inventory-schema';
+import { ASSET_KIND_LABEL, type AssetKind } from '@shared/lib/inventory-schema';
 import {
   COMPUTER_GENERATED_FOOTER,
   IT_DEPT_HEADER,
@@ -19,8 +19,7 @@ export type BulkImportPdfRow = {
   model: string;
   supplier: string;
   serialNum: string;
-  statusId: number;
-  deployInfo: string;
+  purchaseCost: string;
 };
 
 /** Landscape A4 — wider than it is tall, unlike the portrait BASE_PDF used by other reports. */
@@ -53,8 +52,7 @@ const COLUMNS: ColumnDef[] = [
   { key: 'model', label: 'Model', weight: 1.3 },
   { key: 'supplier', label: 'Supplier', weight: 1 },
   { key: 'serialNum', label: 'Serial No.', weight: 1.2 },
-  { key: 'statusId', label: 'Status', weight: 0.8 },
-  { key: 'deployInfo', label: 'Deployed To', weight: 1.7 },
+  { key: 'purchaseCost', label: 'Purchase Cost', weight: 1 },
 ];
 
 type ColumnLayout = ColumnDef & { x: number; w: number };
@@ -74,7 +72,6 @@ function resolveColumnLayouts(): ColumnLayout[] {
 }
 
 function cellValue(row: BulkImportPdfRow, key: keyof BulkImportPdfRow): string {
-  if (key === 'statusId') return formatStatusLabel(row.statusId);
   const value = row[key];
   const str = String(value ?? '').trim();
   return str || '—';
@@ -142,7 +139,7 @@ function buildPageSchemas(pageIndex: number, showMeta: boolean, columns: ColumnL
     for (const col of columns) {
       fields.push(
         T(`${prefix}_r${row}_${col.key}`, col.x, y, col.w, ROW_H, BODY_FONT, {
-          align: col.key === 'statusId' ? 'center' : 'left',
+          align: 'left',
           lineHeight: 1.15,
           overflow: 'visible',
         }),
