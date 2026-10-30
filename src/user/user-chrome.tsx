@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ClipboardPlus, History, LogOut, UserRound } from 'lucide-react';
 import { NimsLogo } from '@/components/brand/NimsLogo';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -19,31 +18,29 @@ export function UserPageChrome({
 }) {
   return (
     <>
-      <header className="sticky top-0 z-10 border-b border-border/80 bg-card/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-2xl items-center justify-between gap-3 px-4">
+      <header className="sticky top-0 z-10 border-b border-violet-950/[0.05] bg-white/75 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-lg items-center justify-between gap-3 px-4">
           <Link to="/user/request" className="flex shrink-0 items-center gap-2">
             <NimsLogo size="sm" variant="light" />
           </Link>
-          <p className="min-w-0 flex-1 text-center text-xs font-bold leading-tight text-foreground sm:text-sm">
+          <p className="min-w-0 flex-1 truncate text-center text-[11px] font-semibold leading-tight text-muted-foreground">
             Information Technology Department
           </p>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
-            className="shrink-0 rounded-[8px]"
             onClick={onSignOut}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-all hover:bg-violet-50 hover:text-violet-700 active:scale-90"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-[18px] w-[18px]" />
             <span className="sr-only">Sign out</span>
-          </Button>
+          </button>
         </div>
       </header>
       <nav
-        className="liquid fixed inset-x-0 bottom-0 z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5"
+        className="fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
         aria-label="User navigation"
       >
-        <div className="mx-auto grid max-w-2xl grid-cols-3 gap-2 px-4">
+        <div className="user-glass mx-auto grid h-16 max-w-sm grid-cols-3 gap-1 rounded-[26px] p-1.5">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = active === tab.id;
@@ -51,14 +48,15 @@ export function UserPageChrome({
               <Link
                 key={tab.id}
                 to={tab.to}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 rounded-2xl px-2 py-2 text-[11px] font-medium transition-all duration-200',
+                  'flex flex-col items-center justify-center gap-0.5 rounded-[20px] text-[11px] font-semibold transition-all duration-200 active:scale-95',
                   isActive
-                    ? 'liquid-active text-primary'
+                    ? 'bg-violet-100/80 text-violet-700'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                <Icon className={cn('h-5 w-5', isActive && 'stroke-[2.25]')} />
+                <Icon className={cn('h-5 w-5', isActive && 'stroke-[2.25] animate-pop-in')} />
                 {tab.label}
               </Link>
             );
